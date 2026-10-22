@@ -1,3 +1,5 @@
+"use client";
+
 import type { StoryRing as StoryRingType } from "@/shared/domain/entities";
 import { UserAvatar } from "@/src/entities/user";
 
