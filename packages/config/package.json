@@ -1,0 +1,9 @@
+{
+  "name": "@ig/config",
+  "version": "0.0.0",
+  "private": true,
+  "exports": {
+    "./tsconfig/*": "./tsconfig/*",
+    "./prettier": "./prettier.config.mjs"
+  }
+}

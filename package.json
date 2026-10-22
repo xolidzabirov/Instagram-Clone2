@@ -1,0 +1,23 @@
+{
+  "name": "instagram-clone",
+  "private": true,
+  "packageManager": "pnpm@10.34.7",
+  "engines": {
+    "node": ">=20.9.0"
+  },
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "devDependencies": {
+    "@ig/config": "workspace:*",
+    "prettier": "^3",
+    "turbo": "^2",
+    "typescript": "^5"
+  },
+  "prettier": "@ig/config/prettier"
+}
