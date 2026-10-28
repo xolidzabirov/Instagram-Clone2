@@ -8,6 +8,8 @@ node_modules/
 out/
 **/out/
 build/
+dist/
+**/dist/
 **/build/
 
 # Testing & Coverage
@@ -29,6 +31,7 @@ yarn-error.log*
 
 # Environment files
 .env*
+!.env.test
 !.env.example
 
 # Turborepo

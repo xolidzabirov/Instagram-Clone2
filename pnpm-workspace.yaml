@@ -4,3 +4,10 @@ packages:
 
 onlyBuiltDependencies:
   - unrs-resolver
+  - "@prisma/engines"
+  - prisma
+  - "@swc/core"
+  - esbuild
+
+ignoredBuiltDependencies:
+  - "@scarf/scarf"

@@ -5,24 +5,24 @@
 ---
 
 ## BE-1. Каркас API и инфраструктура
-**Результат:** запускаемый NestJS-проект в монорепо, локальная инфраструктура в Docker.
-- `apps/api` (NestJS 11, `@ig/api`), подключение `@ig/shared` и `@ig/config`; `@ig/shared` собирается через tsup в ESM+CJS для Node.
-- `docker-compose.yml`: PostgreSQL 17, Redis 7, MinIO (+ автосоздание bucket), Mailpit.
-- Конфиг из env с валидацией Zod (`config/`), `.env.example`.
+**Результат:** запускаемый NestJS-проект в монорепо, подключённый к PostgreSQL.
+- `apps/api` (NestJS 12, `@ig/api`), подключение `@ig/shared` и `@ig/config`; `@ig/shared` собирается через tsup в ESM+CJS для Node.
+- Отдельный кластер PostgreSQL 17 проекта без Docker: `pnpm --filter @ig/api db:local init|start|stop|status` (порт 5434, данные в `%LOCALAPPDATA%/InstagramClone`). `docker-compose.yml` с PostgreSQL, Redis, MinIO и Mailpit — для тех, у кого есть Docker.
+- Конфиг из env с валидацией Zod (`config/`), `.env.example`, порт API 3003.
 - Глобально: `ZodValidationPipe`, фильтр ошибок (единый формат), логирование pino (request id), helmet, CORS (для mobile), `@nestjs/throttler`, версия `/api/v1`, Swagger на `/api/docs`.
-- `infra/prisma`, `infra/redis`, `health` (проверка БД и Redis).
+- `infra/prisma` (Prisma 7 + `@prisma/adapter-pg`), `health` (проверка БД). Redis подключается в BE-5 вместе с очередями.
 - Скрипты: `dev`, `build`, `start`, `lint`, `typecheck`, `test`, `test:e2e`, `db:migrate`, `db:seed`, `db:studio`.
-- Каркас e2e-тестов: Testcontainers (Postgres + Redis), фабрики тестовых данных.
+- Каркас e2e-тестов: Vitest + SWC + Supertest на отдельной базе `instagram_test` (`.env.test`), миграции применяются перед прогоном.
 
-**Приёмка:** `docker compose up -d && pnpm dev` поднимают web и api; `GET /api/v1/health` → 200; Swagger открывается; `pnpm test:e2e` проходит (тест health).
+**Приёмка:** `pnpm --filter @ig/api dev` поднимает API; `GET /api/v1/health` → 200; Swagger открывается на `/api/docs`; `pnpm --filter @ig/api test:e2e` проходит.
 
 ## BE-2. Схема базы данных
 **Результат:** полная Prisma-схема по [03-database.md](03-database.md), первая миграция, сиды.
-- Все таблицы, enum'ы, индексы; расширения `citext`, `pg_trgm` (через SQL в миграции).
+- Все таблицы, enum'ы, индексы; расширение `pg_trgm` и CHECK-ограничения нижнего регистра (через SQL в миграции).
 - UUID v7 генерируется в приложении (helper в `common`).
-- Сиды: 30 пользователей, 300 постов с картинками (загрузка в MinIO), подписки, комментарии, сторис, словарь тем; тестовый аккаунт `demo / Demo1234`.
+- Сиды: 30 пользователей, около 300 постов с картинками (внешние ссылки picsum.photos, пока нет хранилища), подписки, комментарии, сторис, словарь тем; тестовый аккаунт `demo / Demo1234`.
 
-**Приёмка:** `pnpm db:migrate && pnpm db:seed` на чистой БД отрабатывают без ошибок; в `db:studio` видны данные.
+**Приёмка:** `pnpm db:deploy && pnpm db:seed` на чистой БД отрабатывают без ошибок; в `db:studio` видны данные.
 
 ## BE-3. Аутентификация
 **Результат:** модуль `auth` (A1–A7 из ТЗ).
@@ -37,14 +37,14 @@
 
 ## BE-4. Пользователи и профиль
 **Результат:** модуль `users`.
-- `GET/PATCH /users/me`, `GET /users/:username`, ссылки профиля, смена username (уникальность, citext).
+- `GET/PATCH /users/me`, `GET /users/:username`, ссылки профиля, смена username (уникальность, нижний регистр).
 - `PolicyService`: `canView(viewer, owner)` — приватность и блокировки. Используется всеми выдачами далее.
 - `relationship` в ответе профиля.
 
 **Приёмка:** e2e — гость видит публичный профиль, но не видит постов приватного; заблокированный получает 404.
 
 ## BE-5. Медиа-пайплайн
-**Результат:** модули `media`, `infra/storage`, `infra/queue` (раздел 5.3 архитектуры).
+**Результат:** модули `media`, `infra/redis`, `infra/storage`, `infra/queue` (раздел 5.3 архитектуры). Требует Redis и S3 (MinIO): установить Docker Desktop и `docker compose up -d`.
 - Presigned PUT в S3 (MinIO), лимиты по типу и `purpose`, проверка mime и размера.
 - Воркер BullMQ `media`: sharp (WebP 1080/640/320, blurhash, удаление EXIF, авто-поворот), ffmpeg (MP4 H.264 720p, постер, длительность). Повторы с backoff, статус `FAILED`.
 - Событие `media.ready` → сокет (после BE-14) или поллинг `GET /media/:id`.

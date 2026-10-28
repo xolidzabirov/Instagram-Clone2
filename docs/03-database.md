@@ -4,7 +4,8 @@
 - `id`: UUID v7 (сортируется по времени, удобно для курсоров), генерируется в приложении.
 - Время: `timestamptz`, поля `createdAt` и `updatedAt`.
 - Мягкое удаление (`deletedAt`) — только для `User`, `Post`, `Comment` и `Message`.
-- Расширения: `citext` (регистронезависимые username и email), `pg_trgm` (поиск), `postgis` (карта, этап P2).
+- Расширения: `pg_trgm` (поиск), `postgis` (карта, этап P2).
+- `username`, `email` и имена хэштегов хранятся в нижнем регистре (приложение приводит их при записи, CHECK-ограничения в БД не дают сохранить иначе). Так уникальность регистронезависимая, а trigram-индексы работают без `citext`.
 - Счётчики денормализованы и обновляются в той же транзакции, что и действие.
 
 ## 1. Пользователи и сессии
@@ -13,8 +14,8 @@
 | Поле | Тип | Примечание |
 |---|---|---|
 | id | uuid PK | |
-| username | citext UNIQUE | 3–30 символов `[a-z0-9._]` |
-| email | citext UNIQUE | |
+| username | varchar(30) UNIQUE | 1–30 символов `[a-z0-9._]`, нижний регистр |
+| email | varchar(254) UNIQUE | нижний регистр |
 | emailVerifiedAt | timestamptz? | |
 | passwordHash | text | argon2id |
 | fullName | varchar(64) | |
@@ -161,7 +162,7 @@
 ## 6. Хэштеги, упоминания, места, темы
 
 ### `hashtags`
-`id`, `name` citext UNIQUE, `postsCount`. Индекс trigram по `name`.
+`id`, `name` UNIQUE (нижний регистр), `postsCount`. Индекс trigram по `name`.
 
 ### `post_hashtags`
 `postId`, `hashtagId`.

@@ -6,11 +6,11 @@
 |---|---|
 | Монорепо | pnpm workspaces, Turborepo |
 | Web | Next.js 16 (App Router, Turbopack), React 19, TypeScript, Tailwind CSS 4, TanStack Query 5, Zustand 5 (только UI-состояние), react-hook-form + Zod, socket.io-client, next-intl |
-| API | NestJS 11, Prisma ORM, PostgreSQL 17 (расширения `pg_trgm`, `citext`, `PostGIS` для карты), Redis 7, BullMQ, Socket.IO (+ Redis adapter), argon2, JWT |
+| API | NestJS 12, Prisma ORM 7, PostgreSQL 17 (расширения `pg_trgm`, `PostGIS` для карты), Redis 7, BullMQ, Socket.IO (+ Redis adapter), argon2, JWT |
 | Медиа | S3-совместимое хранилище (локально MinIO, в проде Cloudflare R2 или AWS S3), sharp (изображения), ffmpeg (видео), blurhash |
 | Почта | Nodemailer; локально Mailpit (просмотр писем в браузере) |
 | Общие пакеты | `@ig/shared` (типы, Zod-схемы, константы, enum'ы), `@ig/config` (tsconfig, prettier) |
-| Тесты | Jest + Supertest + Testcontainers (API), Vitest + Testing Library (web), Playwright (e2e) |
+| Тесты | Vitest + SWC + Supertest на отдельной тестовой БД (API), Vitest + Testing Library (web), Playwright (e2e) |
 | Качество | ESLint, Steiger (линтер FSD), Prettier, Husky + lint-staged |
 | Инфраструктура | Docker Compose (локально), GitHub Actions (CI), Sentry |
 | Mobile (M12) | Expo, Expo Router, FlashList, Reanimated, expo-image, expo-video |
@@ -37,8 +37,8 @@
 ## 3. Как web общается с API
 
 ```
-Браузер ──► Next.js (web, :3000) ──rewrite /api/v1/* ──► NestJS (api, :3001)
-        ◄── WebSocket (socket.io) напрямую к api :3001 /ws ──►
+Браузер ──► Next.js (web, :3000) ──rewrite /api/v1/* ──► NestJS (api, :3003)
+        ◄── WebSocket (socket.io) напрямую к api :3003 /ws ──►
 ```
 
 - Next.js проксирует `/api/v1/*` на бэкенд через `rewrites` в `next.config.ts`. Для браузера API находится на том же домене, поэтому refresh-cookie первого лица, без CORS-проблем, и `proxy.ts` может проверить наличие сессии.
@@ -158,7 +158,7 @@ apps/api/src/
 | Сервис | Локально | Прод (рекомендация) |
 |---|---|---|
 | web | `pnpm dev`, :3000 | Vercel |
-| api | `pnpm dev`, :3001 | Docker-контейнер на VPS, Railway или Fly.io |
+| api | `pnpm dev`, :3003 | Docker-контейнер на VPS, Railway или Fly.io |
 | PostgreSQL | Docker :5432 | Managed Postgres (Neon, Supabase, RDS) |
 | Redis | Docker :6379 | Upstash или Redis в контейнере |
 | S3 | MinIO :9000 (консоль :9001) | Cloudflare R2 + CDN |
