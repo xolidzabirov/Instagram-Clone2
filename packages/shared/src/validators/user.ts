@@ -83,20 +83,28 @@ export const usernameAvailabilityQuerySchema = z.object({
   username: z.string().max(100),
 });
 
-export const editProfileSchema = z.object({
-  fullName: z.string().trim().max(64),
-  username: usernameSchema,
-  bio: z.string().max(150, "Максимум 150 символов").optional(),
-  links: z
-    .array(
-      z.object({
-        title: z.string().trim().max(30).default(""),
-        url: z.url("Неверный URL").max(2048),
-      })
-    )
-    .max(5, "Максимум 5 ссылок")
-    .optional(),
+export const profileLinkSchema = z.object({
+  title: z.string().trim().max(30, "Максимум 30 символов").default(""),
+  url: z.url({ protocol: /^https?$/, error: "Неверный URL" }).max(2048),
 });
+
+/** PATCH /users/me — every field is optional, only sent fields change */
+export const updateProfileSchema = z
+  .object({
+    fullName: z.string().trim().max(64, "Максимум 64 символа"),
+    username: usernameSchema,
+    bio: z.string().max(150, "Максимум 150 символов"),
+    links: z.array(profileLinkSchema).max(5, "Максимум 5 ссылок"),
+    gender: z.string().trim().max(32).nullable(),
+    pronouns: z.string().trim().max(32).nullable(),
+    isPrivate: z.boolean(),
+    language: z.enum(["ru", "en"]),
+  })
+  .partial()
+  .strict();
+
+/** PUT /users/me/avatar */
+export const setAvatarSchema = z.object({ mediaId: z.uuid() });
 
 export type LoginInput = z.infer<typeof loginSchema>;
 export type RegisterRequest = z.infer<typeof registerRequestSchema>;
@@ -106,4 +114,5 @@ export type ForgotPasswordInput = z.infer<typeof forgotPasswordSchema>;
 export type ResetPasswordInput = z.infer<typeof resetPasswordSchema>;
 export type ChangePasswordInput = z.infer<typeof changePasswordSchema>;
 export type RefreshTokenInput = z.infer<typeof refreshTokenSchema>;
-export type EditProfileInput = z.infer<typeof editProfileSchema>;
+export type UpdateProfileInput = z.infer<typeof updateProfileSchema>;
+export type SetAvatarInput = z.infer<typeof setAvatarSchema>;

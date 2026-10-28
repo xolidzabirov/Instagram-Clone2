@@ -21,3 +21,11 @@ export const CurrentUser = createParamDecorator((_data: unknown, ctx: ExecutionC
   if (!request.auth) throw new Error("CurrentUser used on a route without JwtAuthGuard");
   return request.auth;
 });
+
+/**
+ * `@OptionalUser() auth: AuthContext | null` — on @Public() routes: the caller if they sent
+ * a valid access token, otherwise null (guest)
+ */
+export const OptionalUser = createParamDecorator((_data: unknown, ctx: ExecutionContext) => {
+  return ctx.switchToHttp().getRequest<AuthenticatedRequest>().auth ?? null;
+});

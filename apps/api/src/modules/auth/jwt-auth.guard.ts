@@ -23,10 +23,15 @@ export class JwtAuthGuard implements CanActivate {
       context.getHandler(),
       context.getClass(),
     ]);
-    if (isPublic) return true;
-
     const request = context.switchToHttp().getRequest<AuthenticatedRequest>();
     const [scheme, token] = request.headers.authorization?.split(" ") ?? [];
+
+    if (isPublic) {
+      // Public routes still recognise a signed-in caller (e.g. a profile shows "Following")
+      if (scheme === "Bearer" && token) request.auth = (await this.authenticate(token)) ?? undefined;
+      return true;
+    }
+
     if (scheme !== "Bearer" || !token) {
       throw new AppError("UNAUTHORIZED", "Access token is required", HttpStatus.UNAUTHORIZED);
     }
@@ -45,5 +50,12 @@ export class JwtAuthGuard implements CanActivate {
 
     request.auth = check.auth;
     return true;
+  }
+
+  private async authenticate(token: string) {
+    const check = await this.tokens.verifyAccessToken(token);
+    if (!check.valid) return null;
+    const active = await this.sessions.isActive(check.auth.userId, check.auth.sessionId);
+    return active ? check.auth : null;
   }
 }

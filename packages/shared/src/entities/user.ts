@@ -43,3 +43,30 @@ export interface CurrentUser extends User {
   language: Language;
   role: UserRole;
 }
+
+/** How the viewer relates to a profile owner */
+export interface Relationship {
+  /** Viewer follows the owner (accepted) */
+  following: boolean;
+  /** Viewer sent a follow request that is still pending */
+  followRequested: boolean;
+  /** Owner follows the viewer */
+  followedBy: boolean;
+  /** Viewer blocked the owner */
+  blocking: boolean;
+  /** Owner is in the viewer's close friends list */
+  isCloseFriend: boolean;
+  /** Viewer added the owner to Favorites */
+  isFavorite: boolean;
+  mutedPosts: boolean;
+  mutedStories: boolean;
+}
+
+/** GET /users/:username */
+export interface UserProfile extends User {
+  isMe: boolean;
+  /** False for private accounts the viewer does not follow: hide posts, show "This account is private" */
+  canViewContent: boolean;
+  /** null for guests and for the viewer's own profile */
+  relationship: Relationship | null;
+}

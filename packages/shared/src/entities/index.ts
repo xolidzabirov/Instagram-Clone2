@@ -2,7 +2,16 @@
  * Shared domain entities — barrel export
  */
 
-export type { User, UserPreview, UserLink, CurrentUser, Language, UserRole } from "./user";
+export type {
+  User,
+  UserPreview,
+  UserLink,
+  UserProfile,
+  Relationship,
+  CurrentUser,
+  Language,
+  UserRole,
+} from "./user";
 export type { AuthResponse, SessionInfo, UsernameAvailability } from "./session";
 export type { Post, PostImage, PostPreview, FeedItem } from "./post";
 export type { Comment } from "./comment";

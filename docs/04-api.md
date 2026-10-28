@@ -55,10 +55,10 @@
 | Метод | Путь | Описание |
 |---|---|---|
 | GET | `/users/me` 🔒 | `CurrentUser` |
-| PATCH | `/users/me` 🔒 | `{ fullName, username, bio, links[], gender, pronouns, isPrivate, language }` |
+| PATCH | `/users/me` 🔒 | любые из `{ fullName, username, bio, links[≤5], gender, pronouns, isPrivate, language }`; лишние поля → 400. Переход в публичный аккаунт принимает все заявки |
 | PUT | `/users/me/avatar` 🔒 | `{ mediaId }` |
 | DELETE | `/users/me/avatar` 🔒 | |
-| GET | `/users/:username` 🔓 | `UserProfile` (+ `relationship`: `{ following, followedBy, requested, blocking, isCloseFriend, isFavorite, muted }`) |
+| GET | `/users/:username` 🔓 | `UserProfile`: `User` + `isMe`, `canViewContent`, `relationship` (`{ following, followRequested, followedBy, blocking, isCloseFriend, isFavorite, mutedPosts, mutedStories }`, `null` для гостя и себя). Если владелец заблокировал зрителя → 404 |
 | GET | `/users/:username/posts` 🔓 | сетка постов (закреплённые первыми) |
 | GET | `/users/:username/reels` 🔓 | |
 | GET | `/users/:username/reposts` 🔓 | |
