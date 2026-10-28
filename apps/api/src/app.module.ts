@@ -1,5 +1,6 @@
 import { Module } from "@nestjs/common";
 import { APP_FILTER, APP_GUARD } from "@nestjs/core";
+import { EventEmitterModule } from "@nestjs/event-emitter";
 import { ThrottlerGuard, ThrottlerModule } from "@nestjs/throttler";
 import { LoggerModule } from "nestjs-pino";
 import { randomUUID } from "node:crypto";
@@ -11,6 +12,7 @@ import { PrismaModule } from "./infra/prisma/prisma.module";
 import { StorageModule } from "./infra/storage/storage.module";
 import { AuthModule } from "./modules/auth/auth.module";
 import { HealthModule } from "./modules/health/health.module";
+import { SocialModule } from "./modules/social/social.module";
 import { UsersModule } from "./modules/users/users.module";
 
 @Module({
@@ -42,12 +44,14 @@ import { UsersModule } from "./modules/users/users.module";
         skipIf: () => env.NODE_ENV === "test",
       }),
     }),
+    EventEmitterModule.forRoot(),
     PrismaModule,
     MailModule,
     StorageModule,
     HealthModule,
     AuthModule,
     UsersModule,
+    SocialModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: ThrottlerGuard },

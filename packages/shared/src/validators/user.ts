@@ -8,7 +8,8 @@ import { z } from "zod";
 /** Top-level web routes: a profile at /{username} must never shadow them */
 export const RESERVED_USERNAMES: ReadonlySet<string> = new Set([
   "about", "accounts", "api", "direct", "explore", "help", "instagram", "login", "map",
-  "notifications", "p", "privacy", "register", "reels", "settings", "stories", "terms",
+  "notifications", "p", "privacy", "register", "reels", "settings", "stories", "suggestions",
+  "terms",
 ]);
 
 /** Usernames are case-insensitive: everything is stored lower-cased */
@@ -103,6 +104,17 @@ export const updateProfileSchema = z
   .partial()
   .strict();
 
+/** PATCH /users/:id/relationship — settings of an existing follow */
+export const relationshipUpdateSchema = z
+  .object({
+    isFavorite: z.boolean(),
+    mutedPosts: z.boolean(),
+    mutedStories: z.boolean(),
+  })
+  .partial()
+  .strict()
+  .refine((value) => Object.keys(value).length > 0, "Nothing to update");
+
 /** PUT /users/me/avatar */
 export const setAvatarSchema = z.object({ mediaId: z.uuid() });
 
@@ -115,4 +127,5 @@ export type ResetPasswordInput = z.infer<typeof resetPasswordSchema>;
 export type ChangePasswordInput = z.infer<typeof changePasswordSchema>;
 export type RefreshTokenInput = z.infer<typeof refreshTokenSchema>;
 export type UpdateProfileInput = z.infer<typeof updateProfileSchema>;
+export type RelationshipUpdateInput = z.infer<typeof relationshipUpdateSchema>;
 export type SetAvatarInput = z.infer<typeof setAvatarSchema>;

@@ -2,6 +2,7 @@
  * Domain validators — barrel export
  */
 
+export * from "./common";
 export * from "./user";
 
 export {

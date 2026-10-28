@@ -5,6 +5,7 @@ import {
   updateProfileSchema,
   type CurrentUser as CurrentUserDto,
   type SetAvatarInput,
+  type SuggestedUser,
   type UpdateProfileInput,
   type UserProfile,
 } from "@ig/shared";
@@ -14,8 +15,13 @@ import {
   Public,
   type AuthContext,
 } from "../../common/auth/auth-context";
-import { ZodBody } from "../../common/validation/zod-decorators";
+import { ZodBody, ZodQuery } from "../../common/validation/zod-decorators";
+import { z } from "zod";
 import { UsersService } from "./users.service";
+
+const suggestionsQuerySchema = z.object({
+  limit: z.coerce.number().int().min(1).max(50).default(20),
+});
 
 @ApiTags("users")
 @Controller("users")
@@ -56,6 +62,16 @@ export class UsersController {
   @ApiOperation({ summary: "Remove the profile picture" })
   removeAvatar(@CurrentUser() auth: AuthContext): Promise<CurrentUserDto> {
     return this.users.removeAvatar(auth.userId);
+  }
+
+  @Get("suggestions")
+  @ApiBearerAuth()
+  @ApiOperation({ summary: "Suggested accounts to follow" })
+  suggestions(
+    @CurrentUser() auth: AuthContext,
+    @ZodQuery(suggestionsQuerySchema) query: { limit: number }
+  ): Promise<SuggestedUser[]> {
+    return this.users.suggestions(auth.userId, query.limit);
   }
 
   @Public()

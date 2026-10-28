@@ -32,7 +32,7 @@ export interface UserPreview {
   id: string;
   username: string;
   fullName: string;
-  avatar: string;
+  avatar: string | null;
   isVerified: boolean;
 }
 
@@ -70,3 +70,23 @@ export interface UserProfile extends User {
   /** null for guests and for the viewer's own profile */
   relationship: Relationship | null;
 }
+
+/** Row of follower/following lists: Instagram shows a Follow button on each */
+export interface FollowListItem extends UserPreview {
+  isMe: boolean;
+  /** The viewer follows this user */
+  following: boolean;
+  followRequested: boolean;
+}
+
+export interface SuggestedUser extends UserPreview {
+  /** How many people the viewer follows also follow this user */
+  mutualCount: number;
+}
+
+export interface FollowRequest {
+  user: UserPreview;
+  createdAt: string;
+}
+
+export type FollowStatus = "ACCEPTED" | "PENDING";

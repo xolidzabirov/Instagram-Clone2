@@ -1,9 +1,9 @@
 import { HttpStatus, Injectable } from "@nestjs/common";
-import type { CurrentUser, UpdateProfileInput, UserProfile } from "@ig/shared";
+import type { CurrentUser, SuggestedUser, UpdateProfileInput, UserProfile } from "@ig/shared";
 import { AppError } from "../../common/errors/app-error";
 import { PrismaService } from "../../infra/prisma/prisma.service";
 import { PolicyService } from "./policy.service";
-import { UserPresenter, userPresentationInclude } from "./user.presenter";
+import { UserPresenter, userPresentationInclude, userPreviewSelect } from "./user.presenter";
 
 const userNotFound = () => new AppError("USER_NOT_FOUND", "Пользователь не найден", HttpStatus.NOT_FOUND);
 
@@ -118,5 +118,48 @@ export class UsersService {
       canViewContent: this.policy.canViewContent(viewerId, user, relationship),
       relationship,
     };
+  }
+
+  /**
+   * "Suggested for you": accounts followed by people you follow (most mutuals first),
+   * then popular accounts. Excludes yourself, people you follow or requested, and blocks.
+   */
+  async suggestions(viewerId: string, limit: number): Promise<SuggestedUser[]> {
+    const ranked = await this.prisma.$queryRaw<{ id: string; mutual: number }[]>`
+      WITH mine AS (
+        SELECT "followingId" AS id FROM follows
+        WHERE "followerId" = ${viewerId}::uuid AND status = 'ACCEPTED'
+      ),
+      mutuals AS (
+        SELECT f."followingId" AS id, count(*)::int AS mutual
+        FROM follows f JOIN mine ON mine.id = f."followerId"
+        WHERE f.status = 'ACCEPTED'
+        GROUP BY f."followingId"
+      )
+      SELECT u.id, coalesce(m.mutual, 0)::int AS mutual
+      FROM users u
+      LEFT JOIN mutuals m ON m.id = u.id
+      WHERE u.id <> ${viewerId}::uuid
+        AND u.status = 'ACTIVE' AND u."deletedAt" IS NULL
+        AND NOT EXISTS (
+          SELECT 1 FROM follows f WHERE f."followerId" = ${viewerId}::uuid AND f."followingId" = u.id
+        )
+        AND NOT EXISTS (
+          SELECT 1 FROM blocks b
+          WHERE (b."blockerId" = ${viewerId}::uuid AND b."blockedId" = u.id)
+             OR (b."blockerId" = u.id AND b."blockedId" = ${viewerId}::uuid)
+        )
+      ORDER BY mutual DESC, u."followersCount" DESC, u.id
+      LIMIT ${limit}`;
+
+    const users = await this.prisma.user.findMany({
+      where: { id: { in: ranked.map((row) => row.id) } },
+      select: userPreviewSelect,
+    });
+    const byId = new Map(users.map((user) => [user.id, user]));
+    return ranked.flatMap((row) => {
+      const user = byId.get(row.id);
+      return user ? [{ ...this.presenter.toPreview(user), mutualCount: row.mutual }] : [];
+    });
   }
 }

@@ -64,9 +64,9 @@
 | GET | `/users/:username/reposts` 🔓 | |
 | GET | `/users/:username/tagged` 🔓 | |
 | GET | `/users/me/saved` 🔒 | `?collectionId=` |
-| GET | `/users/:username/followers` 🔒 | `?q=` поиск внутри списка |
+| GET | `/users/:username/followers` 🔒 | `Paginated<FollowListItem>`, `?q=` поиск внутри списка; приватный аккаунт без подписки → 403 `PRIVATE_ACCOUNT` |
 | GET | `/users/:username/following` 🔒 | |
-| GET | `/users/suggestions` 🔒 | рекомендации подписок |
+| GET | `/users/suggestions?limit=` 🔒 | `SuggestedUser[]`: друзья друзей (`mutualCount`), затем популярные |
 | GET | `/users/:username/similar` 🔒 | похожие аккаунты |
 
 ## Follows и отношения
@@ -84,7 +84,9 @@
 | PATCH | `/users/:id/relationship` 🔒 | `{ isFavorite?, mutedPosts?, mutedStories? }` |
 | GET | `/close-friends` 🔒 | |
 | PUT / DELETE | `/close-friends/:userId` 🔒 | |
-| GET | `/blocked` 🔒 | также `/restricted`, `/muted` |
+| GET | `/blocked` 🔒 | `Paginated<UserPreview>`; также `/restricted`, `/muted` |
+
+Коды ошибок: `CANNOT_FOLLOW_SELF` 400, `USER_BLOCKED` 409 (сначала разблокируйте), `NOT_FOLLOWING` 409, `REQUEST_NOT_FOUND` 404, `NOT_A_FOLLOWER` 404, `CANNOT_TARGET_SELF` 400.
 
 ## Media
 
