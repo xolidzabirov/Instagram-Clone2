@@ -1,10 +1,12 @@
 import { Controller, Get, HttpStatus } from "@nestjs/common";
 import { ApiOperation, ApiTags } from "@nestjs/swagger";
 import { SkipThrottle } from "@nestjs/throttler";
+import { Public } from "../../common/auth/auth-context";
 import { AppError } from "../../common/errors/app-error";
 import { PrismaService } from "../../infra/prisma/prisma.service";
 
 @ApiTags("health")
+@Public()
 @SkipThrottle()
 @Controller("health")
 export class HealthController {

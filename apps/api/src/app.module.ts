@@ -6,7 +6,10 @@ import { randomUUID } from "node:crypto";
 import { HttpExceptionFilter } from "./common/filters/http-exception.filter";
 import { ConfigModule, ENV } from "./config/config.module";
 import type { Env } from "./config/env";
+import { MailModule } from "./infra/mail/mail.module";
 import { PrismaModule } from "./infra/prisma/prisma.module";
+import { StorageModule } from "./infra/storage/storage.module";
+import { AuthModule } from "./modules/auth/auth.module";
 import { HealthModule } from "./modules/health/health.module";
 
 @Module({
@@ -30,9 +33,19 @@ import { HealthModule } from "./modules/health/health.module";
         },
       }),
     }),
-    ThrottlerModule.forRoot([{ name: "default", ttl: 60_000, limit: 300 }]),
+    ThrottlerModule.forRootAsync({
+      inject: [ENV],
+      useFactory: (env: Env) => ({
+        throttlers: [{ name: "default", ttl: 60_000, limit: 300 }],
+        // e2e tests create many accounts from one IP
+        skipIf: () => env.NODE_ENV === "test",
+      }),
+    }),
     PrismaModule,
+    MailModule,
+    StorageModule,
     HealthModule,
+    AuthModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: ThrottlerGuard },

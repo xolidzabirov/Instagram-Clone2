@@ -57,13 +57,21 @@ function isRunning() {
 
 function start() {
   if (isRunning()) return console.log(`PostgreSQL is already running on port ${PORT}`);
-  // Detached + ignored stdio: the server must not keep this terminal attached
-  const child = spawn(
-    tool("pg_ctl"),
-    ["-D", DATA, "-l", LOG, "-o", `-p ${PORT} -c listen_addresses=localhost`, "start"],
-    { detached: true, stdio: "ignore", windowsHide: true }
-  );
-  child.unref();
+  const args = ["-D", DATA, "-l", LOG, "-o", `-p ${PORT} -c listen_addresses=localhost`, "start"];
+  if (isWindows) {
+    // A hidden window of its own: when this terminal closes, Windows sends Ctrl+C to every
+    // process attached to its console, which would shut the server down
+    const quote = (value) => `'${value.replace(/'/g, "''")}'`;
+    const argumentList = args.map((arg) => quote(arg.includes(" ") ? `"${arg}"` : arg)).join(",");
+    execFileSync("powershell.exe", [
+      "-NoProfile",
+      "-Command",
+      `Start-Process -WindowStyle Hidden -FilePath ${quote(tool("pg_ctl"))} -ArgumentList ${argumentList}`,
+    ]);
+  } else {
+    const child = spawn(tool("pg_ctl"), args, { detached: true, stdio: "ignore" });
+    child.unref();
+  }
   for (let i = 0; i < 30; i++) {
     try {
       execFileSync(tool("pg_isready"), ["-h", "localhost", "-p", PORT], { stdio: "ignore" });

@@ -28,7 +28,27 @@
 | POST | `/auth/password/change` 🔒 | `{ currentPassword, newPassword }` |
 | GET | `/auth/sessions` 🔒 | список активных сессий |
 | DELETE | `/auth/sessions/:id` 🔒 | завершить сессию |
-| GET | `/auth/username-available?username=` | `{ available, suggestions[] }` |
+| GET | `/auth/username-available?username=` | `{ available, reason?: "TAKEN" | "INVALID", suggestions[] }` |
+
+Ответ входа, регистрации и refresh — `AuthResponse`: `{ accessToken, expiresIn, user: CurrentUser, refreshToken? }` (`refreshToken` в теле только при `X-Client: mobile`, иначе cookie `ig_rt`).
+
+**Коды ошибок auth** (поле `code`):
+
+| Код | HTTP | Что делать клиенту |
+|---|---|---|
+| `VALIDATION_ERROR` | 400 | показать `details.fields` под полями формы |
+| `USERNAME_TAKEN`, `EMAIL_TAKEN` | 409 | ошибка под соответствующим полем |
+| `INVALID_CREDENTIALS` | 401 | «Неверное имя пользователя или пароль» |
+| `ACCOUNT_BANNED` | 403 | экран блокировки |
+| `UNAUTHORIZED` | 401 | нет или неверный access-токен → на `/login` |
+| `TOKEN_EXPIRED` | 401 | вызвать `/auth/refresh` и повторить запрос |
+| `SESSION_REVOKED` | 401 | сессия завершена (выход, смена пароля, бан) → на `/login` |
+| `MISSING_REFRESH_TOKEN`, `INVALID_REFRESH_TOKEN`, `REFRESH_TOKEN_EXPIRED`, `REFRESH_TOKEN_REUSED` | 401 | сессии нет → на `/login` |
+| `REFRESH_TOKEN_STALE` | 401 | другая вкладка только что обновила токен → повторить refresh через секунду |
+| `INVALID_CODE` | 400 | неверный или истёкший код |
+| `TOO_MANY_ATTEMPTS` | 429 | запросить новый код |
+| `INVALID_PASSWORD` | 400 | неверный текущий пароль при смене |
+| `EMAIL_ALREADY_VERIFIED` | 409 | — |
 
 ## Users
 
