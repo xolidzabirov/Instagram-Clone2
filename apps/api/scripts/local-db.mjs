@@ -91,7 +91,11 @@ function init() {
     const pwfile = join(tmpdir(), `ig-pw-${process.pid}`);
     writeFileSync(pwfile, PASSWORD);
     try {
-      run("initdb", ["-D", DATA, "-U", USER, `--pwfile=${pwfile}`, "-E", "UTF8", "--locale=C", "--auth=scram-sha-256"]);
+      // builtin C.UTF-8 (PostgreSQL 17): Unicode-aware lower()/ILIKE, so Cyrillic search is case-insensitive
+      run("initdb", [
+        "-D", DATA, "-U", USER, `--pwfile=${pwfile}`, "-E", "UTF8",
+        "--locale-provider=builtin", "--builtin-locale=C.UTF-8", "--auth=scram-sha-256",
+      ]);
     } finally {
       rmSync(pwfile, { force: true });
     }
@@ -100,7 +104,14 @@ function init() {
   const env = { ...process.env, PGPASSWORD: PASSWORD };
   for (const db of DATABASES) {
     try {
-      execFileSync(tool("createdb"), ["-h", "localhost", "-p", PORT, "-U", USER, db], { stdio: "pipe", env });
+      execFileSync(
+        tool("createdb"),
+        [
+          "-h", "localhost", "-p", PORT, "-U", USER, "-T", "template0", "-E", "UTF8",
+          "--locale-provider=builtin", "--builtin-locale=C.UTF-8", db,
+        ],
+        { stdio: "pipe", env }
+      );
       console.log(`Created database ${db}`);
     } catch (error) {
       if (!String(error.stderr).includes("already exists")) throw error;

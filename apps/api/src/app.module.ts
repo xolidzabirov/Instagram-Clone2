@@ -15,6 +15,7 @@ import { AuthModule } from "./modules/auth/auth.module";
 import { HealthModule } from "./modules/health/health.module";
 import { MediaModule } from "./modules/media/media.module";
 import { PostsModule } from "./modules/posts/posts.module";
+import { EngagementModule } from "./modules/engagement/engagement.module";
 import { SocialModule } from "./modules/social/social.module";
 import { UsersModule } from "./modules/users/users.module";
 
@@ -58,6 +59,7 @@ import { UsersModule } from "./modules/users/users.module";
     SocialModule,
     MediaModule,
     PostsModule,
+    EngagementModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: ThrottlerGuard },

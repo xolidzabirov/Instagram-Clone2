@@ -10,6 +10,8 @@ export const DomainEvents = {
   PostCreated: "post.created",
   UserMentioned: "user.mentioned",
   UserTagged: "user.tagged",
+  PostLiked: "post.liked",
+  PostReposted: "post.reposted",
 } as const;
 
 export interface FollowEvent {
@@ -40,4 +42,11 @@ export interface UserTaggedEvent {
   actorId: string;
   taggedUserId: string;
   postId: string;
+}
+
+/** A user liked or reposted someone's post */
+export interface PostEngagementEvent {
+  postId: string;
+  authorId: string;
+  userId: string;
 }

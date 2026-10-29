@@ -6,6 +6,7 @@ import { DomainEvents } from "../src/common/events/events";
 import { PrismaService } from "../src/infra/prisma/prisma.service";
 import { createTestApp } from "./create-test-app";
 import { resetDatabase } from "./db";
+import { readyMedia as createReadyMedia, publishPost } from "./factories";
 import { registerUser } from "./helpers";
 
 const API = "/api/v1";
@@ -17,39 +18,10 @@ type TestUser = Awaited<ReturnType<typeof registerUser>>;
 const http = () => request(app.getHttpServer());
 const authed = (token: string) => ({ Authorization: `Bearer ${token}` });
 
-/** A processed upload, created directly in the database (processing is covered by media tests) */
-async function readyMedia(ownerId: string, kind: "IMAGE" | "VIDEO" = "IMAGE", purpose: "POST" | "REEL" = "POST") {
-  const media = await prisma.media.create({
-    data: {
-      ownerId,
-      type: kind,
-      purpose,
-      status: "READY",
-      originalKey: `media/${ownerId}/original`,
-      variants:
-        kind === "IMAGE"
-          ? { "1080": "img/1080.webp", "640": "img/640.webp", "320": "img/320.webp" }
-          : { mp4: "vid/video.mp4", poster: "vid/poster-1080.webp", poster640: "vid/poster-640.webp" },
-      width: 1080,
-      height: 1350,
-      blurhash: "LKO2?U%2Tw=w]~RBVZRi};RPxuwH",
-      durationMs: kind === "VIDEO" ? 5000 : null,
-      mime: kind === "IMAGE" ? "image/jpeg" : "video/mp4",
-      sizeBytes: 1000,
-    },
-  });
-  return media.id;
-}
-
-async function publish(user: TestUser, body: Record<string, unknown> = {}) {
-  const mediaIds = (body.mediaIds as string[] | undefined) ?? [await readyMedia(user.user.id)];
-  const res = await http()
-    .post(`${API}/posts`)
-    .set(authed(user.token))
-    .send({ caption: "", ...body, mediaIds })
-    .expect(201);
-  return res.body;
-}
+const readyMedia = (ownerId: string, kind: "IMAGE" | "VIDEO" = "IMAGE", purpose: "POST" | "REEL" = "POST") =>
+  createReadyMedia(app, ownerId, kind, purpose);
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- tests read loosely typed JSON
+const publish = (user: TestUser, body: Record<string, unknown> = {}): Promise<any> => publishPost(app, user, body);
 
 const grid = (username: string, tab = "posts", token?: string, query: Record<string, unknown> = {}) => {
   const req = http().get(`${API}/users/${username}/${tab}`).query(query);

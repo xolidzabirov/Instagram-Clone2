@@ -56,6 +56,24 @@ export const createCommentSchema = z.object({
   parentId: z.uuid().optional(),
 });
 
+/** PUT /posts/:id/save — optionally into one of your collections */
+export const savePostSchema = z.object({ collectionId: z.uuid().nullable().optional() }).strict();
+
+export const collectionNameSchema = z.string().trim().min(1, "Введите название").max(100, "Максимум 100 символов");
+export const createCollectionSchema = z.object({ name: collectionNameSchema }).strict();
+export const updateCollectionSchema = z.object({ name: collectionNameSchema }).strict();
+
+/** GET /users/me/saved */
+export const savedPostsQuerySchema = z.object({
+  cursor: z.string().max(200).optional(),
+  limit: z.coerce.number().int().min(1).max(50).default(20),
+  collectionId: z.uuid().optional(),
+});
+
+export type SavePostInput = z.infer<typeof savePostSchema>;
+export type CreateCollectionInput = z.infer<typeof createCollectionSchema>;
+export type UpdateCollectionInput = z.infer<typeof updateCollectionSchema>;
+export type SavedPostsQuery = z.infer<typeof savedPostsQuerySchema>;
 export type PostTagInput = z.infer<typeof postTagInputSchema>;
 export type CreatePostInput = z.infer<typeof createPostSchema>;
 export type UpdatePostInput = z.infer<typeof updatePostSchema>;

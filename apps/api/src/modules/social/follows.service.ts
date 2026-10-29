@@ -206,11 +206,7 @@ export class FollowsService {
             })
           ).map((row) => ({ createdAt: row.createdAt, person: row.following }));
 
-    const viewerFollows = await this.prisma.follow.findMany({
-      where: { followerId: viewerId, followingId: { in: rows.map((row) => row.person.id) } },
-      select: { followingId: true, status: true },
-    });
-    const statusById = new Map(viewerFollows.map((f) => [f.followingId, f.status]));
+    const statusById = await this.policy.followStatuses(viewerId, rows.map((row) => row.person.id));
 
     return toPage(
       rows,

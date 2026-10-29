@@ -9,6 +9,8 @@ services:
       POSTGRES_USER: instagram
       POSTGRES_PASSWORD: instagram_dev
       POSTGRES_DB: instagram
+      # Unicode-aware case folding for search (Cyrillic usernames, names, hashtags)
+      POSTGRES_INITDB_ARGS: "--locale-provider=builtin --builtin-locale=C.UTF-8"
     ports: ["5432:5432"]
     volumes: [postgres-data:/var/lib/postgresql/data]
     healthcheck:

@@ -56,6 +56,16 @@ export class PolicyService {
     };
   }
 
+  /** The viewer's follow status towards each of the given users (absent = not following) */
+  async followStatuses(viewerId: string | null, userIds: string[]) {
+    if (!viewerId || userIds.length === 0) return new Map<string, "ACCEPTED" | "PENDING">();
+    const rows = await this.prisma.follow.findMany({
+      where: { followerId: viewerId, followingId: { in: userIds } },
+      select: { followingId: true, status: true },
+    });
+    return new Map(rows.map((row) => [row.followingId, row.status]));
+  }
+
   /** Posts, reels, stories and follower lists of the owner */
   canViewContent(viewerId: string | null, owner: Owner, relationship: Relationship | null): boolean {
     if (viewerId === owner.id) return true;

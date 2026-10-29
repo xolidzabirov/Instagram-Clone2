@@ -110,14 +110,14 @@
 | POST / DELETE | `/posts/:id/archive` 🔒 | |
 | POST / DELETE | `/posts/:id/pin` 🔒 | |
 | PUT | `/users/me/grid-order` 🔒 | `{ postIds[] }` (P2) |
-| PUT / DELETE | `/posts/:id/like` 🔒 | |
-| GET | `/posts/:id/likes` 🔒 | кто лайкнул |
-| PUT / DELETE | `/posts/:id/save` 🔒 | `{ collectionId? }` |
-| PUT / DELETE | `/posts/:id/repost` 🔒 | |
+| PUT / DELETE | `/posts/:id/like` 🔒 | идемпотентно → `{ liked, likesCount }` (`null`, если лайки скрыты) |
+| GET | `/posts/:id/likes` 🔒 | `Paginated<FollowListItem>` — кто лайкнул |
+| PUT / DELETE | `/posts/:id/save` 🔒 | `{ collectionId? }` → `{ saved, collectionId }`; повторный PUT с другой подборкой переносит пост |
+| PUT / DELETE | `/posts/:id/repost` 🔒 | 204; свои посты → 400 `CANNOT_REPOST_OWN`, посты приватных аккаунтов → 403 `CANNOT_REPOST_PRIVATE` |
 | POST | `/posts/:id/view` 🔒 | просмотр (Reels, «вы всё посмотрели»), батч допустим |
 | POST | `/posts/:id/not-interested` 🔒 | |
 | POST | `/posts/:id/share` 🔒 | `{ conversationIds[], text? }` → отправка в Direct |
-| GET / POST | `/collections` 🔒 | |
+| GET / POST | `/collections` 🔒 | `Collection { id, name, cover, postsCount }`; одинаковое имя (без учёта регистра) → 409 `COLLECTION_EXISTS` |
 | PATCH / DELETE | `/collections/:id` 🔒 | |
 
 ## Comments

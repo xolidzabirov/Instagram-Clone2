@@ -29,6 +29,7 @@ import { publishedPostWhere, visibleAuthorWhere } from "./post-visibility";
 
 type Tx = Prisma.TransactionClient;
 export type GridTab = "posts" | "reels" | "tagged";
+export type AccessiblePost = PostRow & { author: PostRow["author"] & { isPrivate: boolean } };
 
 const postNotFound = () => new AppError("POST_NOT_FOUND", "Публикация не найдена", HttpStatus.NOT_FOUND);
 const notOwner = () => new AppError("NOT_POST_OWNER", "Only the author can do this", HttpStatus.FORBIDDEN);
@@ -172,14 +173,24 @@ export class PostsService {
   // ─── Read ──────────────────────────────────────────────────────────────────
 
   async get(postId: string, viewerId: string | null): Promise<Post> {
+    return this.presenter.presentOne(await this.accessible(postId, viewerId), viewerId);
+  }
+
+  /**
+   * Loads a post the viewer may see, or throws 404 (deleted, archived, blocked) /
+   * 403 PRIVATE_ACCOUNT. Every action on a post (like, save, comment…) goes through it.
+   */
+  async accessible(postId: string, viewerId: string | null): Promise<AccessiblePost> {
     const post = await this.prisma.post.findUnique({
       where: { id: postId },
-      include: { ...postInclude, author: { select: { ...postInclude.author.select, isPrivate: true, status: true, deletedAt: true } } },
+      include: {
+        ...postInclude,
+        author: { select: { ...postInclude.author.select, isPrivate: true, status: true, deletedAt: true } },
+      },
     });
     if (!post || post.deletedAt || post.author.status !== "ACTIVE" || post.author.deletedAt) throw postNotFound();
 
-    const isAuthor = viewerId === post.authorId;
-    if (!isAuthor) {
+    if (viewerId !== post.authorId) {
       if (post.isArchived) throw postNotFound();
       if (await this.policy.isHiddenFrom(viewerId, post.authorId)) throw postNotFound();
       const relationship = viewerId ? await this.policy.relationship(viewerId, post.authorId) : null;
@@ -188,7 +199,7 @@ export class PostsService {
         throw new AppError("PRIVATE_ACCOUNT", "This account is private", HttpStatus.FORBIDDEN);
       }
     }
-    return this.presenter.presentOne(post as PostRow, viewerId);
+    return post as AccessiblePost;
   }
 
   /** Profile grid: "posts" (pinned first), "reels", or "tagged" */
