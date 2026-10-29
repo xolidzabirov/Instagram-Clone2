@@ -8,6 +8,8 @@ onlyBuiltDependencies:
   - prisma
   - "@swc/core"
   - esbuild
+  - sharp
+  - ffmpeg-static
 
 ignoredBuiltDependencies:
   - "@scarf/scarf"

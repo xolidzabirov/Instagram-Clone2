@@ -1,4 +1,8 @@
+import { homedir } from "node:os";
+import { join } from "node:path";
 import { z } from "zod";
+
+const defaultStorageDir = join(process.env.LOCALAPPDATA ?? join(homedir(), ".local", "share"), "InstagramClone", "media");
 
 const envSchema = z.object({
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
@@ -25,8 +29,17 @@ const envSchema = z.object({
   SMTP_URL: z.string().optional(),
   MAIL_FROM: z.string().default("Instagram Clone <no-reply@instagram.local>"),
 
-  /** Public base URL of the media bucket; absolute URLs stored in media variants are used as-is */
-  MEDIA_PUBLIC_URL: z.string().default("http://localhost:9000/instagram"),
+  /** Base URL clients use to reach this API (upload URLs are built from it) */
+  API_PUBLIC_URL: z.string().default("http://localhost:3003"),
+
+  /**
+   * "local": files on disk, served by the API at /media-files (no Docker needed).
+   * An "s3" driver (MinIO / R2) plugs in behind the same StorageDriver interface later.
+   */
+  STORAGE_DRIVER: z.enum(["local"]).default("local"),
+  STORAGE_LOCAL_DIR: z.string().default(defaultStorageDir),
+  /** Public base URL of stored media; absolute URLs stored in media variants are used as-is */
+  MEDIA_PUBLIC_URL: z.string().default("http://localhost:3003/media-files"),
 });
 
 export type Env = z.infer<typeof envSchema>;

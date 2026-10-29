@@ -22,3 +22,4 @@ export type { Comment } from "./comment";
 export type { Story, StoryItem, StoryRing } from "./story";
 export type { Notification, NotificationType } from "./notification";
 export type { Paginated } from "./pagination";
+export type { MediaUpload, MediaInfo, MediaStatus } from "./media";

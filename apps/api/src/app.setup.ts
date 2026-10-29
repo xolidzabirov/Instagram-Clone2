@@ -1,9 +1,11 @@
 import type { INestApplication } from "@nestjs/common";
 import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
 import cookieParser from "cookie-parser";
+import express from "express";
 import helmet from "helmet";
 import { ENV } from "./config/config.module";
 import type { Env } from "./config/env";
+import { LocalStorageDriver } from "./infra/storage/local-storage.driver";
 
 export const API_PREFIX = "api/v1";
 
@@ -12,6 +14,21 @@ export function setupApp(app: INestApplication) {
   const env = app.get<Env>(ENV);
 
   app.setGlobalPrefix(API_PREFIX);
+
+  // Stored media (local driver). Registered before helmet so images and videos can be
+  // embedded by the web app on another origin; files are immutable (new upload = new key)
+  app.use(
+    "/media-files",
+    express.static(app.get(LocalStorageDriver).root, {
+      immutable: true,
+      maxAge: "365d",
+      index: false,
+      setHeaders: (res) => {
+        res.setHeader("Cross-Origin-Resource-Policy", "cross-origin");
+        res.setHeader("X-Content-Type-Options", "nosniff");
+      },
+    })
+  );
   app.use(helmet());
   app.use(cookieParser());
   // The web app talks to the API through Next.js rewrites (same origin);

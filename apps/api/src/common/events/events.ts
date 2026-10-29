@@ -6,9 +6,16 @@ export const DomainEvents = {
   UserFollowed: "user.followed",
   FollowRequested: "follow.requested",
   FollowAccepted: "follow.accepted",
+  MediaProcessed: "media.processed",
 } as const;
 
 export interface FollowEvent {
   followerId: string;
   followingId: string;
+}
+
+export interface MediaProcessedEvent {
+  mediaId: string;
+  ownerId: string;
+  status: "READY" | "FAILED";
 }

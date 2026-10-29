@@ -9,9 +9,11 @@ import { ConfigModule, ENV } from "./config/config.module";
 import type { Env } from "./config/env";
 import { MailModule } from "./infra/mail/mail.module";
 import { PrismaModule } from "./infra/prisma/prisma.module";
+import { QueueModule } from "./infra/queue/queue.module";
 import { StorageModule } from "./infra/storage/storage.module";
 import { AuthModule } from "./modules/auth/auth.module";
 import { HealthModule } from "./modules/health/health.module";
+import { MediaModule } from "./modules/media/media.module";
 import { SocialModule } from "./modules/social/social.module";
 import { UsersModule } from "./modules/users/users.module";
 
@@ -48,10 +50,12 @@ import { UsersModule } from "./modules/users/users.module";
     PrismaModule,
     MailModule,
     StorageModule,
+    QueueModule,
     HealthModule,
     AuthModule,
     UsersModule,
     SocialModule,
+    MediaModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: ThrottlerGuard },
