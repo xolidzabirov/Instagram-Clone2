@@ -7,6 +7,9 @@ export const DomainEvents = {
   FollowRequested: "follow.requested",
   FollowAccepted: "follow.accepted",
   MediaProcessed: "media.processed",
+  PostCreated: "post.created",
+  UserMentioned: "user.mentioned",
+  UserTagged: "user.tagged",
 } as const;
 
 export interface FollowEvent {
@@ -18,4 +21,23 @@ export interface MediaProcessedEvent {
   mediaId: string;
   ownerId: string;
   status: "READY" | "FAILED";
+}
+
+export interface PostCreatedEvent {
+  postId: string;
+  authorId: string;
+}
+
+export interface UserMentionedEvent {
+  actorId: string;
+  mentionedUserId: string;
+  sourceType: "POST" | "COMMENT" | "STORY";
+  sourceId: string;
+  postId?: string;
+}
+
+export interface UserTaggedEvent {
+  actorId: string;
+  taggedUserId: string;
+  postId: string;
 }

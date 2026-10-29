@@ -59,10 +59,12 @@
 | PUT | `/users/me/avatar` 🔒 | `{ mediaId }` |
 | DELETE | `/users/me/avatar` 🔒 | |
 | GET | `/users/:username` 🔓 | `UserProfile`: `User` + `isMe`, `canViewContent`, `relationship` (`{ following, followRequested, followedBy, blocking, isCloseFriend, isFavorite, mutedPosts, mutedStories }`, `null` для гостя и себя). Если владелец заблокировал зрителя → 404 |
-| GET | `/users/:username/posts` 🔓 | сетка постов (закреплённые первыми) |
+| GET | `/users/:username/posts` 🔓 | `Paginated<PostPreview>`: посты и Reels, закреплённые первыми (только на первой странице) |
 | GET | `/users/:username/reels` 🔓 | |
 | GET | `/users/:username/reposts` 🔓 | |
-| GET | `/users/:username/tagged` 🔓 | |
+| GET | `/users/:username/tagged` 🔓 | только посты авторов, которых зритель может видеть |
+
+Коды ошибок постов: `INVALID_MEDIA` 400 (`details.mediaIds`), `INVALID_LOCATION` 400, `INVALID_TAG` 400, `TAG_NOT_ALLOWED` 400, `NOT_POST_OWNER` 403, `POST_NOT_FOUND` 404, `PIN_LIMIT` 409, `POST_ARCHIVED` 409.
 | GET | `/users/me/saved` 🔒 | `?collectionId=` |
 | GET | `/users/:username/followers` 🔒 | `Paginated<FollowListItem>`, `?q=` поиск внутри списка; приватный аккаунт без подписки → 403 `PRIVATE_ACCOUNT` |
 | GET | `/users/:username/following` 🔒 | |
@@ -100,8 +102,9 @@
 
 | Метод | Путь | Описание |
 |---|---|---|
-| POST | `/posts` 🔒 | `{ type, mediaIds[], caption, locationId?, aspectRatio, tags[{mediaId,userId,x,y}], altTexts{}, hideLikes, commentsDisabled }` |
-| GET | `/posts/:id` 🔓 | `Post` |
+| POST | `/posts` 🔒 | `{ type, mediaIds[1..20], caption, locationId?, aspectRatio, tags[{mediaId,userId,x,y}], altTexts{mediaId: text}, hideLikes, commentsDisabled }` → `Post`. Медиа — свои, `READY`, ещё не использованные; Reels — ровно одно видео с `purpose: REEL`. Хэштеги и упоминания разбираются из подписи (`extractHashtags`/`extractMentions` в `@ig/shared`) |
+| GET | `/posts/archived` 🔒 | `Paginated<PostPreview>` — ваш архив |
+| GET | `/posts/:id` 🔓 | `Post` (с `isLiked`/`isSaved`/`isReposted` для зрителя; `likesCount: null`, если автор скрыл лайки). Приватный автор без подписки → 403 `PRIVATE_ACCOUNT`; архив, блокировка или удалён → 404 |
 | PATCH | `/posts/:id` 🔒 | подпись, отметки, геометка, настройки |
 | DELETE | `/posts/:id` 🔒 | |
 | POST / DELETE | `/posts/:id/archive` 🔒 | |

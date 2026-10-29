@@ -1,7 +1,7 @@
 import { HttpStatus, Injectable } from "@nestjs/common";
 import { AppError } from "../../common/errors/app-error";
 import { PrismaService } from "../../infra/prisma/prisma.service";
-import { PolicyService } from "../users/policy.service";
+import { PolicyService } from "./policy.service";
 
 const notFound = () => new AppError("USER_NOT_FOUND", "Пользователь не найден", HttpStatus.NOT_FOUND);
 
@@ -29,7 +29,7 @@ export class TargetUsers {
     return target;
   }
 
-  async byUsername(viewerId: string, username: string) {
+  async byUsername(viewerId: string | null, username: string) {
     const target = await this.active({ username: username.toLowerCase() });
     if (await this.policy.isHiddenFrom(viewerId, target.id)) throw notFound();
     return target;

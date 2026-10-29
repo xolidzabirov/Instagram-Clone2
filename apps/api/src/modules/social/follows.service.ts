@@ -16,7 +16,7 @@ import { PrismaService } from "../../infra/prisma/prisma.service";
 import { PolicyService } from "../users/policy.service";
 import { UserPresenter, userPreviewSelect } from "../users/user.presenter";
 import { adjustFollowCounters, removeFollow } from "./follow-graph";
-import { TargetUsers } from "./target-users";
+import { TargetUsers } from "../users/target-users";
 
 @Injectable()
 export class FollowsService {
