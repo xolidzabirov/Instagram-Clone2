@@ -63,6 +63,8 @@ export class PostsService {
           aspectRatio: input.type === "REEL" ? "VERTICAL_9_16" : input.aspectRatio,
           hideLikes: input.hideLikes,
           commentsDisabled: input.commentsDisabled,
+          // Fresh post without engagement; PostScoring keeps it up to date afterwards
+          score: 1,
           media: {
             create: input.mediaIds.map((mediaId, position) => ({
               mediaId,

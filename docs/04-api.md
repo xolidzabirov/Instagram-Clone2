@@ -145,8 +145,9 @@
 | GET | `/locations/:id` 🔓 | и `/locations/:id/posts` |
 | GET | `/locations/search?q=` 🔒 | для выбора геометки |
 | GET | `/map/posts?bbox=` 🔒 | посты на карте (P2) |
-| GET | `/topics/me` 🔒 | «Ваш алгоритм»: мои темы и веса |
-| PUT / DELETE | `/topics/me/:topicId` 🔒 | `{ weight }` (добавить, усилить, убрать) |
+| GET | `/topics` 🔓 | все темы |
+| GET | `/topics/me` 🔒 | «Ваш алгоритм»: `UserTopic[]` (вес −1..1, `AUTO` от лайков/репостов или `MANUAL`) |
+| PUT / DELETE | `/topics/me/:topicId` 🔒 | PUT `{ weight }` — задать вручную (автоматика его больше не меняет); DELETE — вернуть к нейтральному |
 
 ## Stories и Highlights
 

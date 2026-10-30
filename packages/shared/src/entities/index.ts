@@ -33,3 +33,4 @@ export type { Notification, NotificationType } from "./notification";
 export type { Paginated } from "./pagination";
 export type { MediaUpload, MediaInfo, MediaStatus } from "./media";
 export type { Collection } from "./collection";
+export type { Topic, UserTopic } from "./topic";

@@ -73,4 +73,7 @@ export interface PostPreview {
   isPinned: boolean;
 }
 
-export type FeedItem = Post;
+/** Home feed entry: a post from someone you follow, or a suggestion */
+export interface FeedItem extends Post {
+  isSuggested: boolean;
+}

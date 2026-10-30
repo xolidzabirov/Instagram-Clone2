@@ -16,6 +16,8 @@ import { HealthModule } from "./modules/health/health.module";
 import { MediaModule } from "./modules/media/media.module";
 import { PostsModule } from "./modules/posts/posts.module";
 import { EngagementModule } from "./modules/engagement/engagement.module";
+import { FeedModule } from "./modules/feed/feed.module";
+import { TopicsModule } from "./modules/topics/topics.module";
 import { SocialModule } from "./modules/social/social.module";
 import { UsersModule } from "./modules/users/users.module";
 
@@ -60,6 +62,8 @@ import { UsersModule } from "./modules/users/users.module";
     MediaModule,
     PostsModule,
     EngagementModule,
+    TopicsModule,
+    FeedModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: ThrottlerGuard },
