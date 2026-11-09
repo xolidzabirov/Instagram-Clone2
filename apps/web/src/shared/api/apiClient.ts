@@ -4,11 +4,10 @@
  */
 
 import axios from "axios";
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api/v1";
+import { API_URL, ROUTES } from "@/shared/config";
 
 export const apiClient = axios.create({
-  baseURL: API_BASE_URL,
+  baseURL: API_URL,
   timeout: 15000,
   headers: {
     "Content-Type": "application/json",
@@ -45,7 +44,7 @@ apiClient.interceptors.response.use(
           throw new Error("No refresh token");
         }
 
-        const { data } = await axios.post(`${API_BASE_URL}/auth/refresh`, {
+        const { data } = await axios.post(`${API_URL}/auth/refresh`, {
           refreshToken,
         });
 
@@ -60,7 +59,7 @@ apiClient.interceptors.response.use(
         localStorage.removeItem("refresh_token");
 
         if (typeof window !== "undefined") {
-          window.location.href = "/auth/login";
+          window.location.href = ROUTES.login;
         }
       }
     }

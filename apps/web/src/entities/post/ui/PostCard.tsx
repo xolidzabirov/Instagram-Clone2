@@ -1,26 +1,35 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import Image from "next/image";
-import type { Post } from "@ig/shared";
-import { FiHeart, FiMessageCircle, FiSend, FiBookmark } from "react-icons/fi";
+import { DEFAULT_AVATAR } from "@/shared/config";
+import type { MockPost as Post } from "../model/types";
+import { FiMessageCircle, FiSend } from "react-icons/fi";
 import { FaHeart } from "react-icons/fa";
 
 interface PostCardProps {
   post: Post;
-  onLike?: (postId: string) => void;
+  /** Like button, provided by the like-post feature */
+  likeSlot?: ReactNode;
+  /** Save button, provided by the save-post feature */
+  saveSlot?: ReactNode;
+  onDoubleTap?: (postId: string) => void;
   onComment?: (postId: string) => void;
   onShare?: (postId: string) => void;
-  onSave?: (postId: string) => void;
 }
 
-export function PostCard({ post, onLike, onComment, onShare, onSave }: PostCardProps) {
+export function PostCard({
+  post,
+  likeSlot,
+  saveSlot,
+  onDoubleTap,
+  onComment,
+  onShare,
+}: PostCardProps) {
   const [showHeartBurst, setShowHeartBurst] = useState(false);
 
   const handleDoubleTap = () => {
-    if (!post.isLiked) {
-      onLike?.(post.id);
-    }
+    onDoubleTap?.(post.id);
     setShowHeartBurst(true);
     setTimeout(() => setShowHeartBurst(false), 850);
   };
@@ -30,7 +39,8 @@ export function PostCard({ post, onLike, onComment, onShare, onSave }: PostCardP
       {/* Header */}
       <div className="flex items-center gap-3 px-4 py-3">
         <Image
-          src={post.author.avatar}
+          src={post.author.avatar ?? DEFAULT_AVATAR}
+          unoptimized={!post.author.avatar}
           alt={post.author.username}
           width={34}
           height={34}
@@ -77,17 +87,7 @@ export function PostCard({ post, onLike, onComment, onShare, onSave }: PostCardP
       {/* Actions */}
       <div className="flex items-center justify-between px-4 pt-3">
         <div className="flex items-center gap-4">
-          <button
-            onClick={() => onLike?.(post.id)}
-            aria-label="Like"
-            className="hover:opacity-70 transition-transform active:scale-125"
-          >
-            {post.isLiked ? (
-              <FaHeart className="w-6 h-6 text-red-500" />
-            ) : (
-              <FiHeart className="w-6 h-6 text-zinc-900 dark:text-zinc-100" />
-            )}
-          </button>
+          {likeSlot}
           <button
             onClick={() => onComment?.(post.id)}
             aria-label="Comment"
@@ -103,19 +103,7 @@ export function PostCard({ post, onLike, onComment, onShare, onSave }: PostCardP
             <FiSend className="w-6 h-6 text-zinc-900 dark:text-zinc-100" />
           </button>
         </div>
-        <button
-          onClick={() => onSave?.(post.id)}
-          aria-label="Save"
-          className="hover:opacity-70 transition-transform active:scale-125"
-        >
-          <FiBookmark
-            className={`w-6 h-6 ${
-              post.isSaved
-                ? "fill-zinc-900 dark:fill-zinc-100 text-zinc-900 dark:text-zinc-100"
-                : "text-zinc-900 dark:text-zinc-100"
-            }`}
-          />
-        </button>
+        {saveSlot}
       </div>
 
       {/* Likes */}

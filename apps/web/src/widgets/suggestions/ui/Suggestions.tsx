@@ -1,6 +1,6 @@
 "use client";
 
-import { UserListItem } from "@/src/entities/user";
+import { UserListItem } from "@/entities/user";
 import type { UserPreview } from "@ig/shared";
 
 const mockSuggestions: UserPreview[] = [

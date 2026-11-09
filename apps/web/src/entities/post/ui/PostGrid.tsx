@@ -18,7 +18,7 @@ export function PostGrid({ posts, onPostClick }: PostGridProps) {
           className="relative aspect-square group bg-zinc-100 dark:bg-zinc-900"
         >
           <Image
-            src={post.thumbnailUrl}
+            src={post.thumbnail ?? ""}
             alt=""
             fill
             className="object-cover"
@@ -35,7 +35,7 @@ export function PostGrid({ posts, onPostClick }: PostGridProps) {
           <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-6">
             <span className="flex items-center gap-1 text-white font-semibold text-sm">
               <FiHeart className="w-5 h-5 fill-white" />
-              {post.likesCount.toLocaleString()}
+              {post.likesCount?.toLocaleString() ?? "—"}
             </span>
             <span className="flex items-center gap-1 text-white font-semibold text-sm">
               <FiMessageCircle className="w-5 h-5 fill-white" />

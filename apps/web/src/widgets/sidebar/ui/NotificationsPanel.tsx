@@ -3,91 +3,16 @@
 import { useState } from "react";
 import Image from "next/image";
 import { FiHeart, FiMessageCircle, FiUserPlus } from "react-icons/fi";
-import { useUIStore } from "@/src/features/ui";
-import { UserAvatar } from "@/src/entities/user";
+import { Avatar } from "@/shared/ui";
+import { useSidebarStore } from "../model/useSidebarStore";
+import { mockNotifications, type NotificationItem } from "../model/mocks";
 
-interface NotificationItem {
-  id: string;
-  user: {
-    username: string;
-    avatar: string;
-  };
-  type: "like" | "comment" | "follow";
-  text: string;
-  time: string;
-  postImage?: string;
-  isFollowing?: boolean;
-  category: "today" | "week" | "earlier";
-}
+export function NotificationsPanel() {
+  const isOpen = useSidebarStore((s) => s.activePanel === "notifications");
+  const closePanel = useSidebarStore((s) => s.closePanel);
+  const [notifications, setNotifications] = useState(mockNotifications);
 
-const INITIAL_NOTIFICATIONS: NotificationItem[] = [
-  {
-    id: "n1",
-    user: {
-      username: "alex_dev",
-      avatar: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=120",
-    },
-    type: "like",
-    text: "понравилась ваша публикация.",
-    time: "45 мин.",
-    postImage: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=120",
-    category: "today",
-  },
-  {
-    id: "n2",
-    user: {
-      username: "travel_world",
-      avatar: "https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=120",
-    },
-    type: "comment",
-    text: "прокомментировал(-а): «Отличная архитектура проекта! 🔥»",
-    time: "2 ч.",
-    postImage: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=120",
-    category: "today",
-  },
-  {
-    id: "n3",
-    user: {
-      username: "sarah_design",
-      avatar: "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=120",
-    },
-    type: "follow",
-    text: "подписался(-ась) на ваши обновления.",
-    time: "1 д.",
-    isFollowing: false,
-    category: "week",
-  },
-  {
-    id: "n4",
-    user: {
-      username: "elena_art",
-      avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=120",
-    },
-    type: "like",
-    text: "понравилась ваша публикация.",
-    time: "3 д.",
-    postImage: "https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=120",
-    category: "week",
-  },
-  {
-    id: "n5",
-    user: {
-      username: "code_master",
-      avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120",
-    },
-    type: "follow",
-    text: "подписался(-ась) на ваши обновления.",
-    time: "1 нед.",
-    isFollowing: true,
-    category: "earlier",
-  },
-];
-
-export function NotificationsDrawer() {
-  const { isNotificationsOpen, closeNotifications } = useUIStore();
-  const [notifications, setNotifications] = useState(INITIAL_NOTIFICATIONS);
-
-  if (!isNotificationsOpen) return null;
+  if (!isOpen) return null;
 
   const toggleFollow = (id: string) => {
     setNotifications((prev) =>
@@ -108,7 +33,7 @@ export function NotificationsDrawer() {
     >
       <div className="flex items-center gap-3 min-w-0 flex-1">
         <div className="relative flex-shrink-0">
-          <UserAvatar src={item.user.avatar} alt={item.user.username} size="md" />
+          <Avatar src={item.user.avatar} alt={item.user.username} size="md" />
           <div className="absolute -bottom-1 -right-1 p-0.5 rounded-full bg-white dark:bg-black text-[10px]">
             {item.type === "like" && <FiHeart className="w-3 h-3 text-red-500 fill-red-500" />}
             {item.type === "comment" && <FiMessageCircle className="w-3 h-3 text-blue-500 fill-blue-500" />}
@@ -151,7 +76,7 @@ export function NotificationsDrawer() {
       {/* Backdrop */}
       <div
         className="fixed inset-0 z-20 bg-black/30 backdrop-blur-[2px] transition-opacity"
-        onClick={closeNotifications}
+        onClick={closePanel}
       />
 
       {/* Drawer */}

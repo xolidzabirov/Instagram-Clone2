@@ -1,5 +1,5 @@
 import type { UserPreview } from "@ig/shared";
-import { UserAvatar } from "./UserAvatar";
+import { Avatar } from "@/shared/ui";
 
 interface UserListItemProps {
   user: UserPreview;
@@ -15,7 +15,7 @@ export function UserListItem({ user, action, subtitle, onClick }: UserListItemPr
       onClick={onClick}
       role={onClick ? "button" : undefined}
     >
-      <UserAvatar src={user.avatar} alt={user.username} size="sm" />
+      <Avatar src={user.avatar} alt={user.username} size="sm" />
       <div className="flex-1 min-w-0">
         <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 truncate">
           {user.username}

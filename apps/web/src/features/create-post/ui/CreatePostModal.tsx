@@ -1,41 +1,22 @@
 "use client";
 
-import { useState, useRef, useEffect, ChangeEvent } from "react";
+import { useState, useRef, useEffect, type ChangeEvent } from "react";
 import Image from "next/image";
 import { FiX, FiImage, FiArrowLeft, FiMapPin, FiSmile } from "react-icons/fi";
-import { useUIStore } from "@/src/features/ui";
-import { usePostStore } from "@/src/features/post";
-
-const PRESET_IMAGES = [
-  {
-    title: "Mountain Sunset",
-    url: "https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=1080",
-  },
-  {
-    title: "Cyberpunk City",
-    url: "https://images.unsplash.com/photo-1519501025264-65ba15a82390?w=1080",
-  },
-  {
-    title: "Minimal Interior",
-    url: "https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=1080",
-  },
-  {
-    title: "Coffee & Coding",
-    url: "https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=1080",
-  },
-];
-
-const FILTERS = [
-  { name: "Normal", class: "filter-normal" },
-  { name: "Clarendon", class: "filter-clarendon" },
-  { name: "Juno", class: "filter-juno" },
-  { name: "Lark", class: "filter-lark" },
-  { name: "Ludwig", class: "filter-ludwig" },
-  { name: "B&W", class: "filter-bw" },
-];
+import { DEFAULT_AVATAR } from "@/shared/config";
+import { usePostStore } from "@/entities/post";
+import { mockCurrentUser } from "@/entities/user";
+import { useCreatePostModal } from "../model/useCreatePostModal";
+import { FILTERS, PRESET_IMAGES } from "../config/presets";
 
 export function CreatePostModal() {
-  const { isCreateModalOpen, closeCreateModal } = useUIStore();
+  const isOpen = useCreatePostModal((s) => s.isOpen);
+  // Mounting the dialog per open gives every new post a fresh form state
+  return isOpen ? <CreatePostDialog /> : null;
+}
+
+function CreatePostDialog() {
+  const close = useCreatePostModal((s) => s.close);
   const addPost = usePostStore((s) => s.addPost);
 
   const [step, setStep] = useState<"select" | "filter" | "caption">("select");
@@ -48,15 +29,12 @@ export function CreatePostModal() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (!isCreateModalOpen) return;
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") handleReset();
+      if (e.key === "Escape") close();
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isCreateModalOpen]);
-
-  if (!isCreateModalOpen) return null;
+  }, [close]);
 
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -77,28 +55,19 @@ export function CreatePostModal() {
     setStep("filter");
   };
 
-  const handleReset = () => {
-    setStep("select");
-    setSelectedImage("");
-    setSelectedFilter("filter-normal");
-    setCaption("");
-    setLocation("");
-    closeCreateModal();
-  };
-
   const handlePublish = async () => {
     if (!selectedImage) return;
     setIsSubmitting(true);
 
     try {
       addPost({
+        author: mockCurrentUser,
         imageUrl: selectedImage,
         caption: caption.trim() || "Новая публикация",
         location: location.trim() || undefined,
-        filterClass: selectedFilter,
       });
 
-      handleReset();
+      close();
     } finally {
       setIsSubmitting(false);
     }
@@ -107,11 +76,11 @@ export function CreatePostModal() {
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 animate-in fade-in duration-200"
-      onClick={handleReset}
+      onClick={close}
     >
       {/* Close button outside modal */}
       <button
-        onClick={handleReset}
+        onClick={close}
         className="absolute top-4 right-4 text-white hover:opacity-80 p-2 z-50 cursor-pointer"
         aria-label="Закрыть"
       >
@@ -287,14 +256,15 @@ export function CreatePostModal() {
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 rounded-full overflow-hidden bg-zinc-200 relative">
                       <Image
-                        src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100"
-                        alt="kholid_official"
+                        src={mockCurrentUser.avatar ?? DEFAULT_AVATAR}
+                        unoptimized={!mockCurrentUser.avatar}
+                        alt={mockCurrentUser.username}
                         fill
                         className="object-cover"
                       />
                     </div>
                     <span className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
-                      kholid_official
+                      {mockCurrentUser.username}
                     </span>
                   </div>
 

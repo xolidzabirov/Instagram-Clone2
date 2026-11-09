@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { registerSchema, type RegisterInput } from "@ig/shared";
+import { registerSchema } from "@ig/shared";
 import { useAuth } from "../model/useAuth";
 
 export function RegisterForm() {

@@ -1,12 +1,22 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import { FiX, FiHeart, FiSend, FiPause, FiPlay } from "react-icons/fi";
 import { FaHeart } from "react-icons/fa";
-import { useStoryStore } from "@/src/features/story";
+import { DEFAULT_AVATAR } from "@/shared/config";
+import { useStoryStore } from "@/entities/story";
 
 export function StoryViewerModal() {
+  const isOpen = useStoryStore((s) => s.isOpen);
+  const activeStoryIndex = useStoryStore((s) => s.activeStoryIndex);
+  const activeItemIndex = useStoryStore((s) => s.activeItemIndex);
+  if (!isOpen) return null;
+  // A new key per slide remounts the player: progress and like reset without an effect
+  return <StoryPlayer key={`${activeStoryIndex}-${activeItemIndex}`} />;
+}
+
+function StoryPlayer() {
   const {
     stories,
     isOpen,
@@ -47,12 +57,6 @@ export function StoryViewerModal() {
 
     return () => clearInterval(timer);
   }, [isOpen, isPaused, activeStoryIndex, activeItemIndex, currentItem, nextItem]);
-
-  // Reset progress when item changes
-  useEffect(() => {
-    setProgress(0);
-    setIsLiked(false);
-  }, [activeStoryIndex, activeItemIndex]);
 
   // Keyboard navigation
   useEffect(() => {
@@ -123,7 +127,8 @@ export function StoryViewerModal() {
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-full overflow-hidden relative border border-white/40">
               <Image
-                src={currentStory.author.avatar}
+                src={currentStory.author.avatar ?? DEFAULT_AVATAR}
+                unoptimized={!currentStory.author.avatar}
                 alt={currentStory.author.username}
                 fill
                 className="object-cover"

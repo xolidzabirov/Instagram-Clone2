@@ -1,5 +1,6 @@
 import Image from "next/image";
-import { cn } from "@/shared/lib/utils";
+import { DEFAULT_AVATAR } from "@/shared/config";
+import { cn } from "@/shared/lib";
 
 type AvatarSize = "xs" | "sm" | "md" | "lg" | "xl";
 
@@ -11,8 +12,9 @@ const sizeMap: Record<AvatarSize, { container: string; px: number }> = {
   xl: { container: "w-[150px] h-[150px]", px: 150 },
 };
 
-interface UserAvatarProps {
-  src: string;
+interface AvatarProps {
+  /** null → default silhouette */
+  src: string | null;
   alt: string;
   size?: AvatarSize;
   hasStory?: boolean;
@@ -20,14 +22,14 @@ interface UserAvatarProps {
   className?: string;
 }
 
-export function UserAvatar({
+export function Avatar({
   src,
   alt,
   size = "md",
   hasStory = false,
   hasUnseenStory = false,
   className,
-}: UserAvatarProps) {
+}: AvatarProps) {
   const { container, px } = sizeMap[size];
 
   return (
@@ -50,10 +52,12 @@ export function UserAvatar({
         )}
       >
         <Image
-          src={src}
+          src={src ?? DEFAULT_AVATAR}
           alt={alt}
           width={px}
           height={px}
+          // The local SVG fallback is served as-is (the optimizer does not process SVG)
+          unoptimized={!src}
           className="object-cover w-full h-full"
         />
       </div>

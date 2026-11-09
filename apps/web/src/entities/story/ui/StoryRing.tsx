@@ -1,7 +1,7 @@
 "use client";
 
 import type { StoryRing as StoryRingType } from "@ig/shared";
-import { UserAvatar } from "@/src/entities/user";
+import { Avatar } from "@/shared/ui";
 
 interface StoryRingProps {
   story: StoryRingType;
@@ -14,7 +14,7 @@ export function StoryRing({ story, onClick }: StoryRingProps) {
       className="flex flex-col items-center gap-1 w-[66px]"
       onClick={() => onClick?.(story.user.id)}
     >
-      <UserAvatar
+      <Avatar
         src={story.user.avatar}
         alt={story.user.username}
         size="lg"

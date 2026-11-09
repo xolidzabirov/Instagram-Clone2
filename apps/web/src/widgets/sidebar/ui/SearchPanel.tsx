@@ -3,89 +3,31 @@
 import { useState, useMemo } from "react";
 import Link from "next/link";
 import { FiSearch, FiX, FiClock } from "react-icons/fi";
-import { useUIStore } from "@/src/features/ui";
-import { UserAvatar } from "@/src/entities/user";
+import { Avatar } from "@/shared/ui";
+import { ROUTES } from "@/shared/config";
+import { useSidebarStore } from "../model/useSidebarStore";
+import { mockSearchResults, type SearchResult } from "../model/mocks";
 
-interface SearchResult {
-  id: string;
-  username: string;
-  fullName: string;
-  avatar: string;
-  isVerified?: boolean;
-  type: "user" | "hashtag";
-  postCount?: number;
-}
-
-const MOCK_RESULTS: SearchResult[] = [
-  {
-    id: "u1",
-    username: "alex_dev",
-    fullName: "Alex | Fullstack Dev",
-    avatar: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=120",
-    isVerified: true,
-    type: "user",
-  },
-  {
-    id: "u2",
-    username: "travel_world",
-    fullName: "World Explorer & Nomad",
-    avatar: "https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=120",
-    isVerified: true,
-    type: "user",
-  },
-  {
-    id: "u3",
-    username: "sarah_design",
-    fullName: "Sarah | UI/UX Designer",
-    avatar: "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=120",
-    isVerified: false,
-    type: "user",
-  },
-  {
-    id: "u4",
-    username: "elena_art",
-    fullName: "Elena Petrova | Artist",
-    avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=120",
-    isVerified: false,
-    type: "user",
-  },
-  {
-    id: "h1",
-    username: "nextjs",
-    fullName: "#nextjs",
-    avatar: "https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=120",
-    type: "hashtag",
-    postCount: 48200,
-  },
-  {
-    id: "h2",
-    username: "nature",
-    fullName: "#nature",
-    avatar: "https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=120",
-    type: "hashtag",
-    postCount: 125000,
-  },
-];
-
-export function SearchDrawer() {
-  const { isSearchOpen, closeSearch } = useUIStore();
+export function SearchPanel() {
+  const isOpen = useSidebarStore((s) => s.activePanel === "search");
+  const closePanel = useSidebarStore((s) => s.closePanel);
   const [query, setQuery] = useState("");
   const [recentSearches, setRecentSearches] = useState<SearchResult[]>([
-    MOCK_RESULTS[0],
-    MOCK_RESULTS[1],
+    mockSearchResults[0],
+    mockSearchResults[1],
   ]);
 
   const filteredResults = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) return [];
-    return MOCK_RESULTS.filter(
+    return mockSearchResults.filter(
       (item) =>
         item.username.toLowerCase().includes(q) ||
         item.fullName.toLowerCase().includes(q)
     );
   }, [query]);
 
-  if (!isSearchOpen) return null;
+  if (!isOpen) return null;
 
   const handleClearRecent = () => {
     setRecentSearches([]);
@@ -100,7 +42,7 @@ export function SearchDrawer() {
     if (!recentSearches.some((r) => r.id === item.id)) {
       setRecentSearches((prev) => [item, ...prev].slice(0, 10));
     }
-    closeSearch();
+    closePanel();
   };
 
   return (
@@ -108,7 +50,7 @@ export function SearchDrawer() {
       {/* Backdrop */}
       <div
         className="fixed inset-0 z-20 bg-black/30 backdrop-blur-[2px] transition-opacity"
-        onClick={closeSearch}
+        onClick={closePanel}
       />
 
       {/* Drawer */}
@@ -167,7 +109,7 @@ export function SearchDrawer() {
                       className="flex items-center justify-between px-6 py-3 hover:bg-zinc-100 dark:hover:bg-zinc-900 cursor-pointer transition-colors"
                     >
                       <div className="flex items-center gap-3 min-w-0">
-                        <UserAvatar src={item.avatar} alt={item.username} size="md" />
+                        <Avatar src={item.avatar} alt={item.username} size="md" />
                         <div className="min-w-0">
                           <p className="text-sm font-semibold truncate flex items-center gap-1">
                             {item.username}
@@ -202,11 +144,11 @@ export function SearchDrawer() {
                 filteredResults.map((item) => (
                   <Link
                     key={item.id}
-                    href={item.type === "user" ? "/profile" : "/explore"}
+                    href={item.type === "user" ? ROUTES.profile : ROUTES.explore}
                     onClick={() => handleSelect(item)}
                     className="flex items-center gap-3 px-6 py-3 hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors"
                   >
-                    <UserAvatar src={item.avatar} alt={item.username} size="md" />
+                    <Avatar src={item.avatar} alt={item.username} size="md" />
                     <div className="min-w-0">
                       <p className="text-sm font-semibold truncate flex items-center gap-1">
                         {item.username}

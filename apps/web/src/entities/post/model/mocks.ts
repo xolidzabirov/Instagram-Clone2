@@ -1,0 +1,88 @@
+import type { MockPost as Post } from "./types";
+
+export const mockPosts: Post[] = [
+  {
+    id: "p1",
+    author: {
+      id: "u1",
+      username: "alex_dev",
+      fullName: "Alex",
+      avatar: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=120",
+      isVerified: true,
+    },
+    images: [
+      {
+        id: "img1",
+        url: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=1080",
+        width: 1080,
+        height: 1080,
+        altText: "3D digital landscape aesthetic",
+      },
+    ],
+    caption: "Разработка полнофункционального Instagram-клона с современной архитектурой FSD и Next.js 16! 🚀💻 #nextjs #fullstack #coding",
+    likesCount: 184,
+    commentsCount: 3,
+    isLiked: false,
+    isSaved: false,
+    location: "Душанбе, Таджикистан",
+    tags: ["nextjs", "fullstack", "coding"],
+    createdAt: new Date(Date.now() - 1000 * 60 * 45).toISOString(),
+    updatedAt: new Date(Date.now() - 1000 * 60 * 45).toISOString(),
+  },
+  {
+    id: "p2",
+    author: {
+      id: "u2",
+      username: "travel_world",
+      fullName: "Travel World",
+      avatar: "https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=120",
+      isVerified: true,
+    },
+    images: [
+      {
+        id: "img2",
+        url: "https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=1080",
+        width: 1080,
+        height: 1080,
+        altText: "Mountain lake sunset",
+      },
+    ],
+    caption: "Завораживающие горные пейзажи и чистейший воздух. Место, куда хочется возвращаться снова и снова 🏔️✨ #nature #mountains #travel",
+    likesCount: 542,
+    commentsCount: 2,
+    isLiked: true,
+    isSaved: true,
+    location: "Памирские горы",
+    tags: ["nature", "mountains", "travel"],
+    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 4).toISOString(),
+    updatedAt: new Date(Date.now() - 1000 * 60 * 60 * 4).toISOString(),
+  },
+  {
+    id: "p3",
+    author: {
+      id: "u3",
+      username: "sarah_design",
+      fullName: "Sarah Designer",
+      avatar: "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=120",
+      isVerified: false,
+    },
+    images: [
+      {
+        id: "img3",
+        url: "https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?w=1080",
+        width: 1080,
+        height: 1080,
+        altText: "Design workspace aesthetic",
+      },
+    ],
+    caption: "Новый проект интерфейса готов. Внимание к каждой детали и минимализм — ключ к успеху! 🎨✨ #ui #ux #design",
+    likesCount: 312,
+    commentsCount: 1,
+    isLiked: false,
+    isSaved: false,
+    location: "Almaty, Kazakhstan",
+    tags: ["ui", "ux", "design"],
+    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 12).toISOString(),
+    updatedAt: new Date(Date.now() - 1000 * 60 * 60 * 12).toISOString(),
+  },
+];

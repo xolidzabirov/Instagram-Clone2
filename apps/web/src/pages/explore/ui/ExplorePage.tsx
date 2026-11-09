@@ -2,9 +2,8 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import { Sidebar } from "@/src/widgets";
-import { usePostStore } from "@/src/features/post";
-import { FiHeart, FiMessageCircle, FiSearch, FiFilm } from "react-icons/fi";
+import { usePostStore } from "@/entities/post";
+import { FiHeart, FiMessageCircle, FiFilm } from "react-icons/fi";
 
 const EXPLORE_TAGS = [
   "Все",
@@ -93,7 +92,7 @@ const EXPLORE_ITEMS = [
   },
 ];
 
-export default function ExplorePage() {
+export function ExplorePage() {
   const [selectedTag, setSelectedTag] = useState("Все");
   const { openPostDetail, posts } = usePostStore();
 
@@ -108,72 +107,69 @@ export default function ExplorePage() {
   };
 
   return (
-    <div className="flex min-h-screen bg-white dark:bg-black text-zinc-900 dark:text-zinc-100">
-      <Sidebar />
-      <main className="flex-1 flex justify-center pl-16 xl:pl-60">
-        <div className="w-full max-w-[975px] py-6 px-4 flex flex-col gap-6">
-          {/* Tag filters */}
-          <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1">
-            {EXPLORE_TAGS.map((tag) => (
-              <button
-                key={tag}
-                onClick={() => setSelectedTag(tag)}
-                className={`px-4 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-colors ${
-                  selectedTag === tag
-                    ? "bg-zinc-900 text-white dark:bg-white dark:text-zinc-900"
-                    : "bg-zinc-100 dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-800"
+    <>
+      <div className="w-full max-w-[975px] py-6 px-4 flex flex-col gap-6">
+        {/* Tag filters */}
+        <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1">
+          {EXPLORE_TAGS.map((tag) => (
+            <button
+              key={tag}
+              onClick={() => setSelectedTag(tag)}
+              className={`px-4 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-colors ${
+                selectedTag === tag
+                  ? "bg-zinc-900 text-white dark:bg-white dark:text-zinc-900"
+                  : "bg-zinc-100 dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-800"
+              }`}
+            >
+              {tag}
+            </button>
+          ))}
+        </div>
+
+        {/* Explore Mosaic Grid */}
+        <div className="grid grid-cols-3 gap-1 sm:gap-2 auto-rows-[140px] sm:auto-rows-[240px] md:auto-rows-[300px]">
+          {EXPLORE_ITEMS.map((item, index) => {
+            // Apply classic Instagram 2x2 feature pattern every 6th item
+            const isFeature = index % 6 === 0;
+
+            return (
+              <div
+                key={item.id}
+                onClick={() => handleOpenItem(item.id)}
+                className={`relative group bg-zinc-100 dark:bg-zinc-900 overflow-hidden cursor-pointer rounded-sm ${
+                  isFeature ? "col-span-2 row-span-2" : "col-span-1 row-span-1"
                 }`}
               >
-                {tag}
-              </button>
-            ))}
-          </div>
+                <Image
+                  src={item.imageUrl}
+                  alt="Explore item"
+                  fill
+                  className="object-cover group-hover:scale-105 transition-transform duration-300"
+                  sizes="(max-width: 768px) 50vw, 33vw"
+                />
 
-          {/* Explore Mosaic Grid */}
-          <div className="grid grid-cols-3 gap-1 sm:gap-2 auto-rows-[140px] sm:auto-rows-[240px] md:auto-rows-[300px]">
-            {EXPLORE_ITEMS.map((item, index) => {
-              // Apply classic Instagram 2x2 feature pattern every 6th item
-              const isFeature = index % 6 === 0;
-
-              return (
-                <div
-                  key={item.id}
-                  onClick={() => handleOpenItem(item.id)}
-                  className={`relative group bg-zinc-100 dark:bg-zinc-900 overflow-hidden cursor-pointer rounded-sm ${
-                    isFeature ? "col-span-2 row-span-2" : "col-span-1 row-span-1"
-                  }`}
-                >
-                  <Image
-                    src={item.imageUrl}
-                    alt="Explore item"
-                    fill
-                    className="object-cover group-hover:scale-105 transition-transform duration-300"
-                    sizes="(max-width: 768px) 50vw, 33vw"
-                  />
-
-                  {item.isVideo && (
-                    <div className="absolute top-3 right-3 text-white drop-shadow p-1">
-                      <FiFilm className="w-5 h-5" />
-                    </div>
-                  )}
-
-                  {/* Hover Overlay */}
-                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-6">
-                    <span className="flex items-center gap-1.5 text-white font-semibold text-sm drop-shadow">
-                      <FiHeart className="w-5 h-5 fill-white" />
-                      {item.likes.toLocaleString()}
-                    </span>
-                    <span className="flex items-center gap-1.5 text-white font-semibold text-sm drop-shadow">
-                      <FiMessageCircle className="w-5 h-5 fill-white" />
-                      {item.comments.toLocaleString()}
-                    </span>
+                {item.isVideo && (
+                  <div className="absolute top-3 right-3 text-white drop-shadow p-1">
+                    <FiFilm className="w-5 h-5" />
                   </div>
+                )}
+
+                {/* Hover Overlay */}
+                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-6">
+                  <span className="flex items-center gap-1.5 text-white font-semibold text-sm drop-shadow">
+                    <FiHeart className="w-5 h-5 fill-white" />
+                    {item.likes.toLocaleString()}
+                  </span>
+                  <span className="flex items-center gap-1.5 text-white font-semibold text-sm drop-shadow">
+                    <FiMessageCircle className="w-5 h-5 fill-white" />
+                    {item.comments.toLocaleString()}
+                  </span>
                 </div>
-              );
-            })}
-          </div>
+              </div>
+            );
+          })}
         </div>
-      </main>
-    </div>
+      </div>
+    </>
   );
 }

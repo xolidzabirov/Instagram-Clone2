@@ -1,4 +1,4 @@
-import { apiClient } from "@/shared/lib/apiClient";
+import { apiClient } from "@/shared/api";
 import type { LoginInput, RegisterInput, User } from "@ig/shared";
 
 interface AuthResponse {

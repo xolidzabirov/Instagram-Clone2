@@ -2,55 +2,31 @@
 
 import { create } from "zustand";
 
-interface UIState {
-  isCreateModalOpen: boolean;
-  isSearchOpen: boolean;
-  isNotificationsOpen: boolean;
+export type SidebarPanel = "search" | "notifications";
+
+interface SidebarState {
+  activePanel: SidebarPanel | null;
   isMoreMenuOpen: boolean;
-  openCreateModal: () => void;
-  closeCreateModal: () => void;
-  toggleSearch: () => void;
-  closeSearch: () => void;
-  toggleNotifications: () => void;
-  closeNotifications: () => void;
+  togglePanel: (panel: SidebarPanel) => void;
+  closePanel: () => void;
   toggleMoreMenu: () => void;
   closeMoreMenu: () => void;
-  closeAllPanels: () => void;
+  closeAll: () => void;
 }
 
-export const useUIStore = create<UIState>((set) => ({
-  isCreateModalOpen: false,
-  isSearchOpen: false,
-  isNotificationsOpen: false,
+export const useSidebarStore = create<SidebarState>((set) => ({
+  activePanel: null,
   isMoreMenuOpen: false,
 
-  openCreateModal: () => set({ isCreateModalOpen: true, isSearchOpen: false, isNotificationsOpen: false }),
-  closeCreateModal: () => set({ isCreateModalOpen: false }),
-
-  toggleSearch: () =>
+  togglePanel: (panel) =>
     set((state) => ({
-      isSearchOpen: !state.isSearchOpen,
-      isNotificationsOpen: false,
+      activePanel: state.activePanel === panel ? null : panel,
       isMoreMenuOpen: false,
     })),
-  closeSearch: () => set({ isSearchOpen: false }),
-
-  toggleNotifications: () =>
-    set((state) => ({
-      isNotificationsOpen: !state.isNotificationsOpen,
-      isSearchOpen: false,
-      isMoreMenuOpen: false,
-    })),
-  closeNotifications: () => set({ isNotificationsOpen: false }),
+  closePanel: () => set({ activePanel: null }),
 
   toggleMoreMenu: () => set((state) => ({ isMoreMenuOpen: !state.isMoreMenuOpen })),
   closeMoreMenu: () => set({ isMoreMenuOpen: false }),
 
-  closeAllPanels: () =>
-    set({
-      isCreateModalOpen: false,
-      isSearchOpen: false,
-      isNotificationsOpen: false,
-      isMoreMenuOpen: false,
-    }),
+  closeAll: () => set({ activePanel: null, isMoreMenuOpen: false }),
 }));
