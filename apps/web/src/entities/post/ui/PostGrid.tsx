@@ -2,6 +2,7 @@ import Image from "next/image";
 import type { PostPreview } from "@ig/shared";
 import { FiHeart, FiMessageCircle } from "react-icons/fi";
 import { MdCollections } from "react-icons/md";
+import { useFormatCount } from "@/shared/i18n";
 
 interface PostGridProps {
   posts: PostPreview[];
@@ -9,6 +10,7 @@ interface PostGridProps {
 }
 
 export function PostGrid({ posts, onPostClick }: PostGridProps) {
+  const formatCount = useFormatCount();
   return (
     <div className="grid grid-cols-3 gap-1">
       {posts.map((post) => (
@@ -35,11 +37,11 @@ export function PostGrid({ posts, onPostClick }: PostGridProps) {
           <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-6">
             <span className="flex items-center gap-1 text-white font-semibold text-sm">
               <FiHeart className="w-5 h-5 fill-white" />
-              {post.likesCount?.toLocaleString() ?? "—"}
+              {post.likesCount === null ? "—" : formatCount(post.likesCount)}
             </span>
             <span className="flex items-center gap-1 text-white font-semibold text-sm">
               <FiMessageCircle className="w-5 h-5 fill-white" />
-              {post.commentsCount.toLocaleString()}
+              {formatCount(post.commentsCount)}
             </span>
           </div>
         </button>

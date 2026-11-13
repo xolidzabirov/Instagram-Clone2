@@ -14,6 +14,7 @@ import {
   FiMusic 
 } from "react-icons/fi";
 import { FaHeart } from "react-icons/fa";
+import { useFormatCount } from "@/shared/i18n";
 
 interface ReelItem {
   id: string;
@@ -81,6 +82,7 @@ const INITIAL_REELS: ReelItem[] = [
 
 export function ReelsPage() {
   const [reels, setReels] = useState<ReelItem[]>(INITIAL_REELS);
+  const formatCount = useFormatCount();
   const [isMuted, setIsMuted] = useState(false);
   const [showHeartBurst, setShowHeartBurst] = useState<string | null>(null);
 
@@ -215,7 +217,7 @@ export function ReelsPage() {
                   )}
                 </div>
                 <span className="text-xs font-medium text-zinc-700 dark:text-zinc-300">
-                  {reel.likesCount.toLocaleString()}
+                  {formatCount(reel.likesCount)}
                 </span>
               </button>
 

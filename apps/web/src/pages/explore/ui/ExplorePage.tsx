@@ -4,6 +4,7 @@ import { useState } from "react";
 import Image from "next/image";
 import { usePostStore } from "@/entities/post";
 import { FiHeart, FiMessageCircle, FiFilm } from "react-icons/fi";
+import { useFormatCount } from "@/shared/i18n";
 
 const EXPLORE_TAGS = [
   "Все",
@@ -94,6 +95,7 @@ const EXPLORE_ITEMS = [
 
 export function ExplorePage() {
   const [selectedTag, setSelectedTag] = useState("Все");
+  const formatCount = useFormatCount();
   const { openPostDetail, posts } = usePostStore();
 
   const handleOpenItem = (id: string) => {
@@ -158,11 +160,11 @@ export function ExplorePage() {
                 <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-6">
                   <span className="flex items-center gap-1.5 text-white font-semibold text-sm drop-shadow">
                     <FiHeart className="w-5 h-5 fill-white" />
-                    {item.likes.toLocaleString()}
+                    {formatCount(item.likes)}
                   </span>
                   <span className="flex items-center gap-1.5 text-white font-semibold text-sm drop-shadow">
                     <FiMessageCircle className="w-5 h-5 fill-white" />
-                    {item.comments.toLocaleString()}
+                    {formatCount(item.comments)}
                   </span>
                 </div>
               </div>

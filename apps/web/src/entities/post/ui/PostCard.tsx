@@ -6,6 +6,7 @@ import { DEFAULT_AVATAR } from "@/shared/config";
 import type { MockPost as Post } from "../model/types";
 import { FiMessageCircle, FiSend } from "react-icons/fi";
 import { FaHeart } from "react-icons/fa";
+import { useFormatCount, useFormatter } from "@/shared/i18n";
 
 interface PostCardProps {
   post: Post;
@@ -27,6 +28,8 @@ export function PostCard({
   onShare,
 }: PostCardProps) {
   const [showHeartBurst, setShowHeartBurst] = useState(false);
+  const formatCount = useFormatCount();
+  const format = useFormatter();
 
   const handleDoubleTap = () => {
     onDoubleTap?.(post.id);
@@ -109,7 +112,7 @@ export function PostCard({
       {/* Likes */}
       <div className="px-4 pt-2">
         <span className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
-          {post.likesCount.toLocaleString()} отметок «Нравится»
+          {formatCount(post.likesCount)} отметок «Нравится»
         </span>
       </div>
 
@@ -137,7 +140,7 @@ export function PostCard({
 
       {/* Timestamp */}
       <time className="block px-4 pt-1 text-[10px] uppercase text-zinc-400">
-        {new Date(post.createdAt).toLocaleDateString()}
+        {format.dateTime(new Date(post.createdAt), { day: "numeric", month: "long", year: "numeric" })}
       </time>
     </article>
   );

@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import Image from "next/image";
 import type { Comment } from "@ig/shared";
 import { DEFAULT_AVATAR } from "@/shared/config";
+import { useFormatter } from "@/shared/i18n";
 
 interface CommentItemProps {
   comment: Comment;
@@ -10,6 +11,7 @@ interface CommentItemProps {
 }
 
 export function CommentItem({ comment, likeSlot }: CommentItemProps) {
+  const format = useFormatter();
   return (
     <div className="flex items-start justify-between gap-2 group">
       <div className="flex items-start gap-3">
@@ -29,10 +31,7 @@ export function CommentItem({ comment, likeSlot }: CommentItemProps) {
           <span className="text-zinc-800 dark:text-zinc-200">{comment.text}</span>
           <div className="flex items-center gap-3 text-[11px] text-zinc-400 mt-1">
             <span>
-              {new Date(comment.createdAt).toLocaleTimeString("ru-RU", {
-                hour: "2-digit",
-                minute: "2-digit",
-              })}
+              {format.dateTime(new Date(comment.createdAt), { hour: "2-digit", minute: "2-digit" })}
             </span>
             {comment.likesCount > 0 && <span>Нравится: {comment.likesCount}</span>}
             <button className="hover:text-zinc-600 font-semibold">Ответить</button>

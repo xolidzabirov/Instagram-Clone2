@@ -11,6 +11,7 @@ import { LikeButton, useLikePost } from "@/features/like-post";
 import { SaveButton } from "@/features/save-post";
 import { AddCommentForm } from "@/features/add-comment";
 import { CommentLikeButton } from "@/features/like-comment";
+import { useFormatCount, useFormatter } from "@/shared/i18n";
 
 export function PostDetailModal() {
   const selectedPostId = usePostStore((s) => s.selectedPostId);
@@ -23,6 +24,8 @@ function PostDetailDialog({ postId }: { postId: string }) {
   const comments = useCommentStore((s) => s.commentsByPost[postId]);
   const { likeOnce } = useLikePost();
   const [showHeartBurst, setShowHeartBurst] = useState(false);
+  const format = useFormatter();
+  const formatCount = useFormatCount();
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -109,7 +112,7 @@ function PostDetailDialog({ postId }: { postId: string }) {
                   <span className="font-semibold text-zinc-900 dark:text-zinc-100 mr-2">{post.author.username}</span>
                   <span className="text-zinc-800 dark:text-zinc-200 leading-relaxed">{post.caption}</span>
                   <div className="text-[11px] text-zinc-400 mt-1">
-                    {new Date(post.createdAt).toLocaleDateString("ru-RU", { day: "numeric", month: "short" })}
+                    {format.dateTime(new Date(post.createdAt), { day: "numeric", month: "short" })}
                   </div>
                 </div>
               </div>
@@ -138,10 +141,10 @@ function PostDetailDialog({ postId }: { postId: string }) {
               <SaveButton postId={post.id} isSaved={post.isSaved} />
             </div>
             <div className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
-              {post.likesCount.toLocaleString()} отметок «Нравится»
+              {formatCount(post.likesCount)} отметок «Нравится»
             </div>
             <div className="text-[10px] uppercase text-zinc-400 tracking-wide mt-0.5">
-              {new Date(post.createdAt).toLocaleDateString("ru-RU", { year: "numeric", month: "long", day: "numeric" })}
+              {format.dateTime(new Date(post.createdAt), { year: "numeric", month: "long", day: "numeric" })}
             </div>
           </div>
 

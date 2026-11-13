@@ -7,11 +7,13 @@ import { Avatar } from "@/shared/ui";
 import { ROUTES } from "@/shared/config";
 import { useNavigationStore } from "../model/useNavigationStore";
 import { mockSearchResults, type SearchResult } from "../model/mocks";
+import { useFormatCount } from "@/shared/i18n";
 
 export function SearchPanel() {
   const isOpen = useNavigationStore((s) => s.activePanel === "search");
   const closePanel = useNavigationStore((s) => s.closePanel);
   const [query, setQuery] = useState("");
+  const formatCount = useFormatCount();
   const [recentSearches, setRecentSearches] = useState<SearchResult[]>([
     mockSearchResults[0],
     mockSearchResults[1],
@@ -158,7 +160,7 @@ export function SearchPanel() {
                       </p>
                       <p className="text-xs text-zinc-500 truncate">
                         {item.type === "hashtag"
-                          ? `${item.postCount?.toLocaleString()} публикаций`
+                          ? `${formatCount(item.postCount ?? 0)} публикаций`
                           : item.fullName}
                       </p>
                     </div>

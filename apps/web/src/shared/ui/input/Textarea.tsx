@@ -2,6 +2,7 @@
 
 import { useId, type Ref, type TextareaHTMLAttributes } from "react";
 import { cn } from "@/shared/lib";
+import { useFormatCount } from "@/shared/i18n";
 
 interface TextareaProps extends TextareaHTMLAttributes<HTMLTextAreaElement> {
   /** Accessible name; visually hidden because Instagram's text areas rely on the placeholder */
@@ -17,6 +18,7 @@ export function Textarea({ label, error, showCount = false, className, id, maxLe
   const textareaId = id ?? autoId;
   const errorId = `${textareaId}-error`;
   const length = typeof value === "string" ? value.length : 0;
+  const formatCount = useFormatCount();
 
   return (
     <div className={cn("w-full", className)}>
@@ -41,7 +43,7 @@ export function Textarea({ label, error, showCount = false, className, id, maxLe
           </span>
           {showCount && maxLength && (
             <span className={cn("ml-auto tabular-nums", length >= maxLength ? "text-danger" : "text-muted")}>
-              {length.toLocaleString()}/{maxLength.toLocaleString()}
+              {formatCount(length)}/{formatCount(maxLength)}
             </span>
           )}
         </div>
