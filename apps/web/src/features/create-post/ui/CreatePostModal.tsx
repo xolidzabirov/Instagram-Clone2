@@ -1,315 +1,281 @@
 "use client";
 
-import { useState, useRef, useEffect, type ChangeEvent } from "react";
-import Image from "next/image";
-import { FiX, FiImage, FiArrowLeft, FiMapPin, FiSmile } from "react-icons/fi";
-import { DEFAULT_AVATAR } from "@/shared/config";
-import { usePostStore } from "@/entities/post";
-import { mockCurrentUser } from "@/entities/user";
+import type { AspectRatio } from "@ig/shared";
+import Link from "next/link";
+import { useEffect, useRef, useState } from "react";
+import { useTranslations } from "@/shared/i18n";
+import { cn } from "@/shared/lib";
+import { ArrowLeftIcon, Button, CheckIcon, Modal, ModalAction, toast } from "@/shared/ui";
+import { useSession } from "@/entities/session";
+import { readFiles } from "../lib/render";
 import { useCreatePostModal } from "../model/useCreatePostModal";
-import { FILTERS, PRESET_IMAGES } from "../config/presets";
+import { usePublishPost } from "../model/usePublishPost";
+import { ASPECT_OPTIONS, REEL_ASPECT, type Slide, type Step } from "../model/types";
+import { CropStep } from "./CropStep";
+import { DetailsPanel, type PostDetails } from "./DetailsPanel";
+import { EditPanel } from "./EditPanel";
+import { SelectStep } from "./SelectStep";
+import { SlideNav } from "./SlideNav";
+import { SlideView } from "./SlideView";
+
+const POST_VIDEO_MAX_S = 60;
+const REEL_MAX_S = 180;
 
 export function CreatePostModal() {
-  const isOpen = useCreatePostModal((s) => s.isOpen);
-  // Mounting the dialog per open gives every new post a fresh form state
+  const isOpen = useCreatePostModal((state) => state.isOpen);
+  // Mounting per open gives every new post a fresh state
   return isOpen ? <CreatePostDialog /> : null;
 }
 
+/** The ratio Instagram picks for the first photo: wide → 16:9, about square → 1:1, else 4:5 */
+function defaultRatio(slide: Slide): AspectRatio {
+  const ratio = slide.width / slide.height;
+  if (ratio > 1.3) return "LANDSCAPE";
+  if (ratio > 0.9) return "SQUARE";
+  return "PORTRAIT_4_5";
+}
+
 function CreatePostDialog() {
-  const close = useCreatePostModal((s) => s.close);
-  const addPost = usePostStore((s) => s.addPost);
+  const t = useTranslations("create");
+  const common = useTranslations("common");
+  const close = useCreatePostModal((state) => state.close);
+  const user = useSession();
+  const [step, setStep] = useState<Step>("select");
+  const [slides, setSlides] = useState<Slide[]>([]);
+  const [index, setIndex] = useState(0);
+  const [aspectRatio, setAspectRatio] = useState<AspectRatio>("PORTRAIT_4_5");
+  const [details, setDetails] = useState<PostDetails>({ caption: "", hideLikes: false, commentsDisabled: false });
+  const [confirm, setConfirm] = useState<"close" | "back" | null>(null);
+  const publish = usePublishPost();
 
-  const [step, setStep] = useState<"select" | "filter" | "caption">("select");
-  const [selectedImage, setSelectedImage] = useState<string>("");
-  const [selectedFilter, setSelectedFilter] = useState<string>("filter-normal");
-  const [caption, setCaption] = useState<string>("");
-  const [location, setLocation] = useState<string>("");
-  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
-
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
+  // Object URLs live as long as the dialog
+  const slidesRef = useRef(slides);
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") close();
-    };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [close]);
+    slidesRef.current = slides;
+  }, [slides]);
+  useEffect(() => () => slidesRef.current.forEach((slide) => URL.revokeObjectURL(slide.url)), []);
 
-  const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        if (event.target?.result) {
-          setSelectedImage(event.target.result as string);
-          setStep("filter");
-        }
-      };
-      reader.readAsDataURL(file);
-    }
+  const isReel = slides.length === 1 && slides[0]!.kind === "video" && slides[0]!.height > slides[0]!.width;
+  const aspect = isReel ? REEL_ASPECT : ASPECT_OPTIONS.find((option) => option.ratio === aspectRatio)!.value;
+  const slide = slides[Math.min(index, slides.length - 1)];
+
+  const addFiles = async (files: File[]) => {
+    const { slides: added, skipped } = await readFiles(files, 20 - slides.length);
+    const all = [...slides, ...added];
+    const reel = all.length === 1 && all[0]!.kind === "video" && all[0]!.height > all[0]!.width;
+    const limit = reel ? REEL_MAX_S : POST_VIDEO_MAX_S;
+    const fitting = added.filter((item) => item.durationMs === null || item.durationMs <= limit * 1000);
+    added.filter((item) => !fitting.includes(item)).forEach((item) => URL.revokeObjectURL(item.url));
+
+    if (fitting.length < added.length) toast.error(t("tooLong", { seconds: limit }));
+    else if (skipped > 0) toast.error(t("unsupported"));
+    if (fitting.length === 0) return;
+
+    if (slides.length === 0) setAspectRatio(defaultRatio(fitting[0]!));
+    setSlides((current) => [...current, ...fitting]);
+    setIndex(slides.length);
+    setStep("crop");
   };
 
-  const handleSelectPreset = (url: string) => {
-    setSelectedImage(url);
-    setStep("filter");
+  const updateSlide = (patch: Partial<Slide>) =>
+    setSlides((current) => current.map((item, position) => (position === index ? { ...item, ...patch } : item)));
+
+  const removeSlide = (id: string) => {
+    const removed = slides.find((item) => item.id === id);
+    if (removed) URL.revokeObjectURL(removed.url);
+    const rest = slides.filter((item) => item.id !== id);
+    setSlides(rest);
+    setIndex((value) => Math.max(0, Math.min(value, rest.length - 1)));
+    if (rest.length === 0) setStep("select");
   };
 
-  const handlePublish = async () => {
-    if (!selectedImage) return;
-    setIsSubmitting(true);
-
-    try {
-      addPost({
-        author: mockCurrentUser,
-        imageUrl: selectedImage,
-        caption: caption.trim() || "Новая публикация",
-        location: location.trim() || undefined,
-      });
-
-      close();
-    } finally {
-      setIsSubmitting(false);
-    }
+  const moveSlide = (from: number, to: number) => {
+    setSlides((current) => {
+      const next = [...current];
+      const [moved] = next.splice(from, 1);
+      next.splice(to, 0, moved!);
+      return next;
+    });
+    setIndex(to);
   };
+
+  const discard = () => {
+    slides.forEach((item) => URL.revokeObjectURL(item.url));
+    setSlides([]);
+    setIndex(0);
+    setStep("select");
+  };
+
+  const requestClose = () => {
+    if (step === "sharing" && publish.isPending) return;
+    if (slides.length > 0 && step !== "sharing") setConfirm("close");
+    else close();
+  };
+
+  const goBack = () => {
+    if (step === "crop") setConfirm("back");
+    else if (step === "edit") setStep("crop");
+    else if (step === "details") setStep("edit");
+  };
+
+  const share = () => {
+    setStep("sharing");
+    publish.publish({ slides, aspect, aspectRatio: isReel ? "VERTICAL_9_16" : aspectRatio, isReel, ...details });
+  };
+
+  const title =
+    step === "select"
+      ? t("title")
+      : step === "crop"
+        ? t("cropTitle")
+        : step === "edit"
+          ? t("editTitle")
+          : step === "details"
+            ? isReel
+              ? t("reelTitle")
+              : t("detailsTitle")
+            : publish.isSuccess
+              ? t("sharedTitle")
+              : t("sharingTitle");
+
+  const action =
+    step === "crop" || step === "edit"
+      ? { label: t("next"), onClick: () => setStep(step === "crop" ? "edit" : "details") }
+      : step === "details"
+        ? { label: t("share"), onClick: share }
+        : null;
+
+  const withPanel = step === "edit" || step === "details";
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 animate-fade-in"
-      onClick={close}
-    >
-      {/* Close button outside modal */}
-      <button
-        onClick={close}
-        className="absolute top-4 right-4 text-white hover:opacity-80 p-2 z-50 cursor-pointer"
-        aria-label="Закрыть"
-      >
-        <FiX className="w-7 h-7" />
-      </button>
-
+    <Modal open onClose={requestClose} ariaLabel={title} size="auto" closeOnBackdrop className="rounded-xl">
       <div
-        className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl overflow-hidden shadow-2xl max-w-4xl w-full flex flex-col max-h-[85vh] relative z-10"
-        onClick={(e) => e.stopPropagation()}
+        className={cn(
+          "flex flex-col",
+          withPanel
+            ? "[--area:min(calc(100vw_-_32px),50dvh)] md:[--area:min(calc(100dvh_-_140px),calc(100vw_-_420px),760px)]"
+            : "[--area:min(calc(100dvh_-_140px),calc(100vw_-_32px),760px)]"
+        )}
       >
-        {/* Modal Header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-zinc-100 font-semibold text-sm">
-          {step !== "select" ? (
-            <button
-              onClick={() => setStep(step === "caption" ? "filter" : "select")}
-              className="text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100"
-            >
-              <FiArrowLeft className="w-5 h-5" />
-            </button>
-          ) : (
-            <div className="w-5" />
-          )}
-
-          <span>
-            {step === "select" && "Создание публикации"}
-            {step === "filter" && "Фильтры и редактирование"}
-            {step === "caption" && "Создание новой публикации"}
-          </span>
-
-          {step === "filter" && (
-            <button
-              onClick={() => setStep("caption")}
-              className="text-blue-500 hover:text-blue-600 font-semibold text-sm"
-            >
-              Далее
+        <header className="relative flex h-[43px] shrink-0 items-center justify-center border-b border-separator px-12">
+          {(step === "crop" || step === "edit" || step === "details") && (
+            <button type="button" aria-label={t("back")} onClick={goBack} className="absolute left-2 p-2 hover:opacity-60">
+              <ArrowLeftIcon className="size-6" />
             </button>
           )}
-
-          {step === "caption" && (
+          <h2 className="truncate text-base font-semibold">{title}</h2>
+          {action && (
             <button
-              onClick={handlePublish}
-              disabled={isSubmitting}
-              className="text-blue-500 hover:text-blue-600 font-semibold text-sm disabled:opacity-50"
+              type="button"
+              onClick={action.onClick}
+              className="absolute right-4 text-sm font-semibold text-primary hover:text-link"
             >
-              {isSubmitting ? "Публикация..." : "Поделиться"}
+              {action.label}
             </button>
           )}
+        </header>
 
-          {step === "select" && <div className="w-5" />}
-        </div>
+        <div className="flex flex-col md:flex-row">
+          <div className="relative size-[var(--area)] shrink-0 overflow-hidden">
+            {step === "select" && <SelectStep onFiles={(files) => void addFiles(files)} />}
 
-        {/* Modal Content */}
-        <div className="flex-1 overflow-hidden flex flex-col md:flex-row">
-          {step === "select" && (
-            <div className="flex-1 flex flex-col items-center justify-center p-8 text-center min-h-[420px]">
-              <div className="w-20 h-20 rounded-full bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center mb-4 text-zinc-600 dark:text-zinc-400">
-                <FiImage className="w-10 h-10" />
-              </div>
-              <h3 className="text-xl font-medium text-zinc-900 dark:text-zinc-100 mb-2">
-                Перетащите сюда фото или видео
-              </h3>
-              <p className="text-sm text-zinc-500 mb-6 max-w-sm">
-                Выберите файл с компьютера или используйте один из готовых примеров ниже
-              </p>
-
-              <input
-                type="file"
-                ref={fileInputRef}
-                onChange={handleFileChange}
-                accept="image/*"
-                className="hidden"
+            {step === "crop" && slide && (
+              <CropStep
+                slides={slides}
+                index={index}
+                onIndexChange={setIndex}
+                aspect={aspect}
+                aspectRatio={aspectRatio}
+                isReel={isReel}
+                onAspectChange={setAspectRatio}
+                onCropChange={(crop) => updateSlide({ crop })}
+                onAddFiles={(files) => void addFiles(files)}
+                onRemove={removeSlide}
+                onMove={moveSlide}
               />
+            )}
 
-              <button
-                onClick={() => fileInputRef.current?.click()}
-                className="px-5 py-2.5 bg-blue-500 hover:bg-blue-600 text-white text-sm font-semibold rounded-lg transition-colors mb-8 shadow-sm"
-              >
-                Выбрать на компьютере
-              </button>
-
-              <div className="w-full max-w-md pt-4 border-t border-zinc-200 dark:border-zinc-800">
-                <p className="text-xs text-zinc-400 uppercase tracking-wider font-semibold mb-3">
-                  Быстрый выбор из примеров:
-                </p>
-                <div className="grid grid-cols-4 gap-2">
-                  {PRESET_IMAGES.map((preset) => (
-                    <button
-                      key={preset.title}
-                      onClick={() => handleSelectPreset(preset.url)}
-                      className="group relative aspect-square rounded-lg overflow-hidden border border-zinc-200 dark:border-zinc-700 hover:opacity-90 transition-opacity"
-                    >
-                      <Image
-                        src={preset.url}
-                        alt={preset.title}
-                        fill
-                        className="object-cover group-hover:scale-105 transition-transform duration-300"
-                        sizes="100px"
-                      />
-                    </button>
-                  ))}
-                </div>
+            {withPanel && slide && (
+              <div className="relative size-full bg-control">
+                <SlideView slide={slide} aspect={aspect} />
+                <SlideNav index={index} total={slides.length} onChange={setIndex} />
               </div>
-            </div>
-          )}
+            )}
 
-          {step === "filter" && (
-            <div className="flex-1 flex flex-col md:flex-row h-full">
-              {/* Image Preview */}
-              <div className="flex-1 bg-black flex items-center justify-center relative min-h-[350px]">
-                <div className={`relative w-full h-[450px] ${selectedFilter}`}>
-                  <Image
-                    src={selectedImage}
-                    alt="Preview"
-                    fill
-                    className="object-contain"
-                  />
-                </div>
-              </div>
-
-              {/* Filter Thumbnails */}
-              <div className="w-full md:w-64 border-t md:border-t-0 md:border-l border-zinc-200 dark:border-zinc-800 p-4 overflow-y-auto">
-                <h4 className="text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-4">
-                  Фильтры
-                </h4>
-                <div className="grid grid-cols-3 md:grid-cols-2 gap-3">
-                  {FILTERS.map((f) => (
-                    <button
-                      key={f.name}
-                      onClick={() => setSelectedFilter(f.class)}
-                      className={`flex flex-col items-center gap-1.5 p-1 rounded-lg transition-all ${
-                        selectedFilter === f.class
-                          ? "ring-2 ring-blue-500 scale-105"
-                          : "opacity-80 hover:opacity-100"
-                      }`}
-                    >
-                      <div className={`relative w-16 h-16 rounded-md overflow-hidden ${f.class}`}>
-                        <Image
-                          src={selectedImage}
-                          alt={f.name}
-                          fill
-                          className="object-cover"
-                          sizes="64px"
-                        />
-                      </div>
-                      <span className="text-xs font-medium text-zinc-800 dark:text-zinc-200">
-                        {f.name}
+            {step === "sharing" && (
+              <div className="flex size-full flex-col items-center justify-center gap-5 p-6 text-center">
+                {publish.isSuccess ? (
+                  <>
+                    <span className="flex size-24 items-center justify-center rounded-full bg-gradient-to-tr from-[#feda75] via-[#d62976] to-[#4f5bd5] p-[3px]">
+                      <span className="flex size-full items-center justify-center rounded-full bg-elevated">
+                        <CheckIcon className="size-12 text-[#d62976]" />
                       </span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {step === "caption" && (
-            <div className="flex-1 flex flex-col md:flex-row h-full">
-              {/* Image Preview Left */}
-              <div className="flex-1 bg-black flex items-center justify-center relative min-h-[350px]">
-                <div className={`relative w-full h-[450px] ${selectedFilter}`}>
-                  <Image
-                    src={selectedImage}
-                    alt="Final Preview"
-                    fill
-                    className="object-contain"
-                  />
-                </div>
-              </div>
-
-              {/* Caption & Details Form Right */}
-              <div className="w-full md:w-80 border-t md:border-t-0 md:border-l border-zinc-200 dark:border-zinc-800 p-4 flex flex-col justify-between">
-                <div className="flex flex-col gap-4">
-                  {/* Author preview */}
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full overflow-hidden bg-zinc-200 relative">
-                      <Image
-                        src={mockCurrentUser.avatar ?? DEFAULT_AVATAR}
-                        unoptimized={!mockCurrentUser.avatar}
-                        alt={mockCurrentUser.username}
-                        fill
-                        className="object-cover"
-                      />
-                    </div>
-                    <span className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
-                      {mockCurrentUser.username}
                     </span>
-                  </div>
-
-                  {/* Caption Input */}
-                  <div className="relative">
-                    <textarea
-                      value={caption}
-                      onChange={(e) => setCaption(e.target.value)}
-                      placeholder="Добавьте подпись..."
-                      rows={5}
-                      className="w-full text-sm bg-transparent border-0 focus:ring-0 resize-none outline-none text-zinc-900 dark:text-zinc-100 placeholder-zinc-400"
-                    />
-                    <div className="flex items-center justify-between text-zinc-400 pt-2 border-t border-zinc-100 dark:border-zinc-800">
-                      <button
-                        type="button"
-                        onClick={() => setCaption((prev) => prev + " ✨")}
-                        className="hover:text-zinc-600 dark:hover:text-zinc-200"
-                      >
-                        <FiSmile className="w-5 h-5" />
-                      </button>
-                      <span className="text-xs">{caption.length}/2,200</span>
-                    </div>
-                  </div>
-
-                  {/* Location Input */}
-                  <div className="flex items-center gap-2 border-t border-zinc-200 dark:border-zinc-800 pt-3">
-                    <FiMapPin className="w-5 h-5 text-zinc-400 flex-shrink-0" />
-                    <input
-                      type="text"
-                      value={location}
-                      onChange={(e) => setLocation(e.target.value)}
-                      placeholder="Укажите местоположение"
-                      className="w-full text-sm bg-transparent outline-none text-zinc-900 dark:text-zinc-100 placeholder-zinc-400"
-                    />
-                  </div>
-                </div>
-
-                <div className="pt-4 text-xs text-zinc-400">
-                  Ваша публикация появится в ленте и на вашей странице профиля.
-                </div>
+                    <p className="text-xl">{isReel ? t("reelShared") : t("shared")}</p>
+                    <Link href={`/p/${publish.data.id}`} onClick={close} className="text-sm font-semibold text-primary">
+                      {t("viewPost")}
+                    </Link>
+                  </>
+                ) : publish.isError ? (
+                  <>
+                    <p className="max-w-xs text-sm text-muted">{t("failed")}</p>
+                    <Button size="sm" onClick={share}>
+                      {t("retry")}
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <span className="relative flex size-24 items-center justify-center">
+                      <span className="absolute inset-0 animate-spin rounded-full bg-[conic-gradient(#feda75,#fa7e1e,#d62976,#962fbf,#4f5bd5,#feda75)] [mask:radial-gradient(farthest-side,transparent_calc(100%_-_4px),#000_calc(100%_-_3px))]" />
+                      <span className="text-sm font-semibold">{Math.round(publish.progress * 100)}%</span>
+                    </span>
+                    <p className="text-xl">{t("sharing")}</p>
+                  </>
+                )}
               </div>
-            </div>
+            )}
+          </div>
+
+          {withPanel && slide && (
+            <aside className="h-[min(40dvh,320px)] w-[var(--area)] border-separator max-md:border-t md:h-[var(--area)] md:w-[340px] md:border-l">
+              {step === "edit" ? (
+                <EditPanel slide={slide} onChange={updateSlide} />
+              ) : (
+                <DetailsPanel
+                  user={{ username: user?.username ?? "", avatar: user?.avatar ?? null }}
+                  slides={slides}
+                  details={details}
+                  onChange={(patch) => setDetails((current) => ({ ...current, ...patch }))}
+                  onAltText={(id, text) =>
+                    setSlides((current) => current.map((item) => (item.id === id ? { ...item, altText: text } : item)))
+                  }
+                />
+              )}
+            </aside>
           )}
         </div>
       </div>
-    </div>
+
+      {confirm && (
+        <Modal open onClose={() => setConfirm(null)} size="sm" ariaLabel={t("discardTitle")}>
+          <div className="flex flex-col items-center gap-2 px-8 pb-6 pt-8 text-center">
+            <h2 className="text-xl">{t("discardTitle")}</h2>
+            <p className="text-sm text-muted">{t("discardText")}</p>
+          </div>
+          <ModalAction
+            tone="danger"
+            onClick={() => {
+              const wasClosing = confirm === "close";
+              setConfirm(null);
+              if (wasClosing) close();
+              else discard();
+            }}
+          >
+            {t("discard")}
+          </ModalAction>
+          <ModalAction onClick={() => setConfirm(null)}>{common("cancel")}</ModalAction>
+        </Modal>
+      )}
+    </Modal>
   );
 }

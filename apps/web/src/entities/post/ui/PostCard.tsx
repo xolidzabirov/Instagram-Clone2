@@ -127,7 +127,11 @@ export function PostCard({
         </div>
 
         <p className="text-sm font-semibold">
-          {post.likesCount === null ? t("likesHidden") : t("likes", { count: post.likesCount })}
+          {post.likesCount === null
+            ? t("likesHidden")
+            : post.likesCount === 0
+              ? t("beFirst")
+              : t("likes", { count: post.likesCount })}
         </p>
 
         {post.caption && <Caption post={post} />}
