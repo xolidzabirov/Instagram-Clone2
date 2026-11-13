@@ -1,1 +1,1 @@
-export { ThemeToggleButton } from "./ui/ThemeToggleButton";
+export { ThemeSwitcher, ThemeToggleItem } from "./ui/ThemeControls";

@@ -4,12 +4,12 @@ import { useState } from "react";
 import Image from "next/image";
 import { FiHeart, FiMessageCircle, FiUserPlus } from "react-icons/fi";
 import { Avatar } from "@/shared/ui";
-import { useSidebarStore } from "../model/useSidebarStore";
+import { useNavigationStore } from "../model/useNavigationStore";
 import { mockNotifications, type NotificationItem } from "../model/mocks";
 
 export function NotificationsPanel() {
-  const isOpen = useSidebarStore((s) => s.activePanel === "notifications");
-  const closePanel = useSidebarStore((s) => s.closePanel);
+  const isOpen = useNavigationStore((s) => s.activePanel === "notifications");
+  const closePanel = useNavigationStore((s) => s.closePanel);
   const [notifications, setNotifications] = useState(mockNotifications);
 
   if (!isOpen) return null;
@@ -75,12 +75,12 @@ export function NotificationsPanel() {
     <>
       {/* Backdrop */}
       <div
-        className="fixed inset-0 z-20 bg-black/30 backdrop-blur-[2px] transition-opacity"
+        className="fixed inset-0 z-20"
         onClick={closePanel}
       />
 
       {/* Drawer */}
-      <div className="fixed left-16 top-0 bottom-0 z-30 w-96 bg-white dark:bg-zinc-950 border-r border-zinc-200 dark:border-zinc-800 shadow-2xl flex flex-col animate-in slide-in-from-left duration-200">
+      <div className="fixed inset-x-0 top-14 bottom-12 z-30 flex flex-col bg-background md:inset-x-auto md:left-[72px] md:top-0 md:bottom-0 md:w-[397px] md:rounded-r-2xl md:border-r md:border-separator md:shadow-[4px_0_24px_rgba(0,0,0,0.15)] animate-slide-in-left">
         {/* Header */}
         <div className="p-6 border-b border-zinc-200 dark:border-zinc-800">
           <h2 className="text-2xl font-bold tracking-tight">Уведомления</h2>

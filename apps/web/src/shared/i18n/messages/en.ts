@@ -1,0 +1,48 @@
+import type { Messages } from "./ru";
+
+export const en: Messages = {
+  common: {
+    close: "Close",
+    cancel: "Cancel",
+    save: "Save",
+    done: "Done",
+    retry: "Try again",
+    loading: "Loading…",
+    verified: "Verified",
+    showPassword: "Show password",
+    hidePassword: "Hide password",
+    errorTitle: "Something went wrong",
+    errorDescription: "We couldn't load this. Check your connection and try again.",
+  },
+  nav: {
+    main: "Main navigation",
+    home: "Home",
+    search: "Search",
+    explore: "Explore",
+    reels: "Reels",
+    messages: "Messages",
+    notifications: "Notifications",
+    create: "Create",
+    profile: "Profile",
+    more: "More",
+  },
+  menu: {
+    settings: "Settings",
+    saved: "Saved",
+    appearance: "Appearance",
+    themeSystem: "System",
+    themeLight: "Light",
+    themeDark: "Dark",
+    switchToDark: "Dark mode",
+    switchToLight: "Light mode",
+    language: "Language",
+    logout: "Log out",
+  },
+  time: {
+    now: "just now",
+    minutes: "{count}m",
+    hours: "{count}h",
+    days: "{count}d",
+    weeks: "{count}w",
+  },
+};

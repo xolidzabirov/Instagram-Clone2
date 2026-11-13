@@ -37,7 +37,7 @@ export function ProfilePage() {
             <UserAvatar
               src={avatar}
               alt={username}
-              size="xl"
+              size="2xl"
             />
           </div>
 

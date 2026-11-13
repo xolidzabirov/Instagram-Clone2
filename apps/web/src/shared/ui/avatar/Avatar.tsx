@@ -2,14 +2,30 @@ import Image from "next/image";
 import { DEFAULT_AVATAR } from "@/shared/config";
 import { cn } from "@/shared/lib";
 
-type AvatarSize = "xs" | "sm" | "md" | "lg" | "xl";
+const sizes = {
+  xs: { box: "size-6", px: 24 },
+  sm: { box: "size-8", px: 32 },
+  md: { box: "size-11", px: 44 },
+  /** Story tray */
+  lg: { box: "size-[66px]", px: 66 },
+  /** Profile header on phones */
+  xl: { box: "size-[77px]", px: 77 },
+  /** Profile header on desktop */
+  "2xl": { box: "size-[150px]", px: 150 },
+};
 
-const sizeMap: Record<AvatarSize, { container: string; px: number }> = {
-  xs: { container: "w-6 h-6", px: 24 },
-  sm: { container: "w-8 h-8", px: 32 },
-  md: { container: "w-11 h-11", px: 44 },
-  lg: { container: "w-20 h-20", px: 80 },
-  xl: { container: "w-[150px] h-[150px]", px: 150 },
+export type AvatarSize = keyof typeof sizes;
+
+/**
+ * Story ring around the picture:
+ * "unseen" gradient, "seen" grey, "close-friends" green, "none" no ring.
+ */
+export type AvatarRing = "none" | "unseen" | "seen" | "close-friends";
+
+const rings: Record<Exclude<AvatarRing, "none">, string> = {
+  unseen: "bg-[linear-gradient(45deg,#f09433,#e6683c_25%,#dc2743_50%,#cc2366_75%,#bc1888)]",
+  seen: "bg-separator",
+  "close-friends": "bg-success",
 };
 
 interface AvatarProps {
@@ -17,40 +33,19 @@ interface AvatarProps {
   src: string | null;
   alt: string;
   size?: AvatarSize;
-  hasStory?: boolean;
-  hasUnseenStory?: boolean;
+  ring?: AvatarRing;
   className?: string;
 }
 
-export function Avatar({
-  src,
-  alt,
-  size = "md",
-  hasStory = false,
-  hasUnseenStory = false,
-  className,
-}: AvatarProps) {
-  const { container, px } = sizeMap[size];
+export function Avatar({ src, alt, size = "md", ring = "none", className }: AvatarProps) {
+  const { box, px } = sizes[size];
+  const hasRing = ring !== "none";
+  // Thicker ring on large avatars, like the story tray and profile header
+  const ringWidth = px >= 66 ? "p-[3px]" : "p-[2px]";
 
   return (
-    <div
-      className={cn(
-        "relative rounded-full flex-shrink-0",
-        hasStory && "p-[2px]",
-        hasStory &&
-          (hasUnseenStory
-            ? "bg-gradient-to-tr from-yellow-400 via-pink-500 to-purple-600"
-            : "bg-zinc-300 dark:bg-zinc-600"),
-        className
-      )}
-    >
-      <div
-        className={cn(
-          container,
-          "rounded-full overflow-hidden",
-          hasStory && "border-2 border-white dark:border-black"
-        )}
-      >
+    <div className={cn("relative shrink-0 rounded-full", hasRing && ringWidth, hasRing && rings[ring], className)}>
+      <div className={cn(box, "overflow-hidden rounded-full bg-control", hasRing && "border-2 border-background")}>
         <Image
           src={src ?? DEFAULT_AVATAR}
           alt={alt}
@@ -58,7 +53,7 @@ export function Avatar({
           height={px}
           // The local SVG fallback is served as-is (the optimizer does not process SVG)
           unoptimized={!src}
-          className="object-cover w-full h-full"
+          className="size-full object-cover"
         />
       </div>
     </div>

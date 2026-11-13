@@ -290,7 +290,7 @@ export function DirectPage() {
                   <UserAvatar
                     src={activeChat.user.avatar}
                     alt={activeChat.user.username}
-                    size="xl"
+                    size="2xl"
                   />
                   <h4 className="font-bold text-base">{activeChat.user.fullName}</h4>
                   <p className="text-xs text-zinc-400">@{activeChat.user.username} • Instagram</p>

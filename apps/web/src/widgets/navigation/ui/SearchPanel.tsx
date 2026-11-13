@@ -5,12 +5,12 @@ import Link from "next/link";
 import { FiSearch, FiX, FiClock } from "react-icons/fi";
 import { Avatar } from "@/shared/ui";
 import { ROUTES } from "@/shared/config";
-import { useSidebarStore } from "../model/useSidebarStore";
+import { useNavigationStore } from "../model/useNavigationStore";
 import { mockSearchResults, type SearchResult } from "../model/mocks";
 
 export function SearchPanel() {
-  const isOpen = useSidebarStore((s) => s.activePanel === "search");
-  const closePanel = useSidebarStore((s) => s.closePanel);
+  const isOpen = useNavigationStore((s) => s.activePanel === "search");
+  const closePanel = useNavigationStore((s) => s.closePanel);
   const [query, setQuery] = useState("");
   const [recentSearches, setRecentSearches] = useState<SearchResult[]>([
     mockSearchResults[0],
@@ -49,12 +49,12 @@ export function SearchPanel() {
     <>
       {/* Backdrop */}
       <div
-        className="fixed inset-0 z-20 bg-black/30 backdrop-blur-[2px] transition-opacity"
+        className="fixed inset-0 z-20"
         onClick={closePanel}
       />
 
       {/* Drawer */}
-      <div className="fixed left-16 top-0 bottom-0 z-30 w-96 bg-white dark:bg-zinc-950 border-r border-zinc-200 dark:border-zinc-800 shadow-2xl flex flex-col animate-in slide-in-from-left duration-200">
+      <div className="fixed inset-x-0 top-14 bottom-12 z-30 flex flex-col bg-background md:inset-x-auto md:left-[72px] md:top-0 md:bottom-0 md:w-[397px] md:rounded-r-2xl md:border-r md:border-separator md:shadow-[4px_0_24px_rgba(0,0,0,0.15)] animate-slide-in-left">
         {/* Header */}
         <div className="p-6 border-b border-zinc-200 dark:border-zinc-800 flex flex-col gap-6">
           <h2 className="text-2xl font-bold tracking-tight">Поисковый запрос</h2>

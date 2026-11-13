@@ -18,8 +18,7 @@ export function StoryRing({ story, onClick }: StoryRingProps) {
         src={story.user.avatar}
         alt={story.user.username}
         size="lg"
-        hasStory
-        hasUnseenStory={story.hasUnseenStories}
+        ring={story.hasUnseenStories ? "unseen" : "seen"}
       />
       <span className="text-xs text-zinc-900 dark:text-zinc-100 truncate w-full text-center">
         {story.user.username}
