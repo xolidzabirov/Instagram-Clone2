@@ -44,6 +44,17 @@ import {
   PiWarningCircle,
   PiX,
   PiXCircle,
+  PiSquaresFour,
+  PiCopySimpleFill,
+  PiPushPinFill,
+  PiUserSquare,
+  PiChatCircleFill,
+  PiUserPlus,
+  PiCaretDown,
+  PiLink,
+  PiFilmSlate,
+  PiStar,
+  PiStarFill,
 } from "react-icons/pi";
 
 export type IconProps = SVGAttributes<SVGElement> & { size?: number | string };
@@ -95,3 +106,13 @@ export const WarningIcon = single(PiWarningCircle);
 export const VerifiedIcon = single(PiSealCheckFill);
 export const FieldErrorIcon = single(PiXCircle);
 export const LockIcon = single(PiLockKey);
+export const GridIcon = single(PiSquaresFour);
+export const CarouselIcon = single(PiCopySimpleFill);
+export const PinIcon = single(PiPushPinFill);
+export const TaggedIcon = single(PiUserSquare);
+export const CommentFilledIcon = single(PiChatCircleFill);
+export const AddUserIcon = single(PiUserPlus);
+export const ChevronDownIcon = single(PiCaretDown);
+export const LinkIcon = single(PiLink);
+export const ReelTabIcon = single(PiFilmSlate);
+export const StarIcon = pair(PiStar, PiStarFill);

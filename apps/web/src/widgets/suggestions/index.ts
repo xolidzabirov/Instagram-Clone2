@@ -1,1 +1,1 @@
-export { Suggestions } from "./ui/Suggestions";
+export { Suggestions, SuggestionsList } from "./ui/Suggestions";

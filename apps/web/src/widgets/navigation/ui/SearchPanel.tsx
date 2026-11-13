@@ -4,7 +4,7 @@ import { useState, useMemo } from "react";
 import Link from "next/link";
 import { FiSearch, FiX, FiClock } from "react-icons/fi";
 import { Avatar } from "@/shared/ui";
-import { ROUTES } from "@/shared/config";
+import { ROUTES, profileRoute } from "@/shared/config";
 import { useNavigationStore } from "../model/useNavigationStore";
 import { mockSearchResults, type SearchResult } from "../model/mocks";
 import { useFormatCount } from "@/shared/i18n";
@@ -146,7 +146,7 @@ export function SearchPanel() {
                 filteredResults.map((item) => (
                   <Link
                     key={item.id}
-                    href={item.type === "user" ? ROUTES.profile : ROUTES.explore}
+                    href={item.type === "user" ? profileRoute(item.username) : ROUTES.explore}
                     onClick={() => handleSelect(item)}
                     className="flex items-center gap-3 px-6 py-3 hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors"
                   >

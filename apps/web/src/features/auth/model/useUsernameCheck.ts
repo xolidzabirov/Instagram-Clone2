@@ -2,17 +2,12 @@
 
 import { usernameSchema, type UsernameAvailability } from "@ig/shared";
 import { useQuery } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import { useDebouncedValue } from "@/shared/lib";
 import { authApi } from "../api/authApi";
 
 /** Checks a username while the user types (debounced), like Instagram's sign-up form */
 export function useUsernameCheck(username: string) {
-  const [debounced, setDebounced] = useState(username);
-
-  useEffect(() => {
-    const timer = setTimeout(() => setDebounced(username), 400);
-    return () => clearTimeout(timer);
-  }, [username]);
+  const debounced = useDebouncedValue(username, 400);
 
   const valid = usernameSchema.safeParse(debounced).success;
   const query = useQuery({

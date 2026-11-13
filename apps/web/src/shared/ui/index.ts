@@ -1,7 +1,8 @@
 export { Avatar, type AvatarRing, type AvatarSize } from "./avatar/Avatar";
 export { CountBadge } from "./badge/CountBadge";
 export { VerifiedBadge } from "./badge/VerifiedBadge";
-export { Button, type ButtonProps } from "./button/Button";
+export { Button, buttonClassName, type ButtonProps } from "./button/Button";
+export { ButtonLink } from "./button/ButtonLink";
 export { IconButton } from "./button/IconButton";
 export {
   Dropdown,

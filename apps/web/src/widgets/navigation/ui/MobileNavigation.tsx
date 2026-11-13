@@ -48,7 +48,7 @@ export function MobileHeader() {
 /** Bottom bar on phones in Instagram's 2025–2026 order: Home · Reels · Direct · Search · Profile */
 export function BottomNav() {
   const t = useTranslations("nav");
-  const { active, closePanel, avatar } = useNavigation();
+  const { active, closePanel, avatar, profileHref } = useNavigation();
 
   const item = (section: NavSection, href: string, icon: (filled: boolean) => ReactNode) => {
     const isActive = active === section;
@@ -76,7 +76,7 @@ export function BottomNav() {
       {item("messages", ROUTES.direct, (filled) => <MessagesIcon filled={filled} className="size-6" />)}
       {/* Search lives on the Explore page on phones */}
       {item("explore", ROUTES.explore, (filled) => <SearchIcon filled={filled} className="size-6" />)}
-      {item("profile", ROUTES.profile, (isActive) => (
+      {item("profile", profileHref, (isActive) => (
         <Avatar src={avatar} alt="" size="xs" className={cn(isActive && "outline outline-2 outline-foreground")} />
       ))}
     </nav>

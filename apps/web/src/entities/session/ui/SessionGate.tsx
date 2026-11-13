@@ -1,6 +1,6 @@
 "use client";
 
-import { usePathname, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useEffect, type ReactNode } from "react";
 import { ROUTES } from "@/shared/config";
 import { LogoMark } from "@/shared/ui";
@@ -14,7 +14,6 @@ import { refreshSession, useSessionStore } from "../model/session";
 export function SessionGate({ children }: { children: ReactNode }) {
   const status = useSessionStore((state) => state.status);
   const router = useRouter();
-  const pathname = usePathname();
 
   useEffect(() => {
     if (useSessionStore.getState().status === "loading") void refreshSession();
@@ -22,9 +21,12 @@ export function SessionGate({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (status !== "guest") return;
-    const next = pathname && pathname !== ROUTES.home ? `?next=${encodeURIComponent(pathname)}` : "";
+    // Read in the effect, not with usePathname(): that hook would make the layout wait for the
+    // URL of dynamic routes like /{username} and drop it from the prerendered shell
+    const pathname = window.location.pathname;
+    const next = pathname !== ROUTES.home ? `?next=${encodeURIComponent(pathname)}` : "";
     router.replace(`${ROUTES.login}${next}`);
-  }, [status, router, pathname]);
+  }, [status, router]);
 
   const ready = status === "authenticated";
 

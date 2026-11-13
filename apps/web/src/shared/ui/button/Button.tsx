@@ -27,6 +27,24 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   ref?: Ref<HTMLButtonElement>;
 }
 
+/** Button look for other elements, e.g. a Link that should look like a button */
+export function buttonClassName({
+  variant = "primary",
+  size = "md",
+  fullWidth = false,
+  className,
+}: Pick<ButtonProps, "variant" | "size" | "fullWidth" | "className">) {
+  return cn(
+    "relative inline-flex items-center justify-center gap-2 rounded-lg font-semibold whitespace-nowrap select-none",
+    "transition-colors active:opacity-70 disabled:opacity-40 disabled:pointer-events-none",
+    "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary",
+    variants[variant],
+    sizes[size],
+    fullWidth && "w-full",
+    className
+  );
+}
+
 export function Button({
   variant = "primary",
   size = "md",
@@ -44,15 +62,7 @@ export function Button({
       type={type}
       disabled={disabled || loading}
       aria-busy={loading || undefined}
-      className={cn(
-        "relative inline-flex items-center justify-center gap-2 rounded-lg font-semibold whitespace-nowrap select-none",
-        "transition-colors active:opacity-70 disabled:opacity-40 disabled:pointer-events-none",
-        "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary",
-        variants[variant],
-        sizes[size],
-        fullWidth && "w-full",
-        className
-      )}
+      className={buttonClassName({ variant, size, fullWidth, className })}
       {...props}
     >
       <span className={cn("inline-flex items-center gap-2", loading && "invisible")}>

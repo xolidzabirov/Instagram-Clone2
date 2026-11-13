@@ -24,7 +24,7 @@ import { navIconClass, navItemClass, NavLabel } from "./NavItem";
 /** Desktop and tablet navigation: 244px with labels from xl, 72px icons-only below */
 export function Sidebar() {
   const t = useTranslations("nav");
-  const { active, activePanel, togglePanel, closePanel, createPost, avatar } = useNavigation();
+  const { active, activePanel, togglePanel, closePanel, createPost, avatar, profileHref } = useNavigation();
   const collapsed = activePanel !== null;
 
   const link = (section: NavSection, href: string, icon: (filled: boolean) => ReactNode) => {
@@ -88,7 +88,7 @@ export function Sidebar() {
           <CreateIcon className={navIconClass} />
           <NavLabel collapsed={collapsed}>{t("create")}</NavLabel>
         </button>
-        {link("profile", ROUTES.profile, (isActive) => (
+        {link("profile", profileHref, (isActive) => (
           <Avatar
             src={avatar}
             alt=""

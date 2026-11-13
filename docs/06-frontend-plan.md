@@ -51,7 +51,7 @@
 **Приёмка:** полный цикл регистрация → код из Mailpit → лента; неверный пароль показывает ошибку под формой; гость попадает на `/login`.
 
 ## FE-5. Профиль
-**Слайсы:** `entities/user`, `widgets/profile-header`, `widgets/profile-tabs`, `pages/profile`, `pages/edit-profile`, `features/edit-profile`, `features/upload-avatar`, `entities/post` (`PostGrid` 3:4).
+**Слайсы:** `entities/user`, `widgets/profile-header`, `widgets/profile-tabs`, `pages/profile`, `pages/edit-profile`, `features/edit-profile` (вместе с загрузкой аватара: FSD запрещает импорт фичи из фичи), `entities/post` (`PostGrid` 3:4).
 - Маршрут `/[username]` (+ вкладки как вложенные маршруты), заглушка «Этот аккаунт закрыт».
 - Сетка **3:4** с бесконечной прокруткой и иконками (карусель, Reels, закреп).
 - Редактирование профиля `/accounts/edit`, обрезка аватара.
@@ -60,7 +60,7 @@
 **Приёмка:** чужой и свой профиль отличаются кнопками; изменение bio сразу отражается в шапке; приватный профиль скрывает сетку.
 
 ## FE-6. Подписки и отношения
-**Слайсы:** `features/follow-user`, `features/block-user`, `widgets/suggestions`.
+**Слайсы:** `features/follow-user`, `features/block-user`, `widgets/suggestions`, `widgets/follow-list`.
 - Кнопка подписки во всех местах (профиль, рекомендации, списки, уведомления): «Подписаться», «Подписки ▾», «Запрос отправлен», «Подписаться в ответ».
 - Модалки «Подписчики» и «Подписки» с поиском, заявки на подписку.
 - Меню отношений: Избранное, Близкие друзья, Заглушить, Ограничить, Заблокировать.
