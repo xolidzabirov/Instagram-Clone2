@@ -7,8 +7,8 @@ import { FaHeart } from "react-icons/fa";
 import { DEFAULT_AVATAR } from "@/shared/config";
 import { usePostStore } from "@/entities/post";
 import { CommentItem, useCommentStore } from "@/entities/comment";
-import { LikeButton, useLikePost } from "@/features/like-post";
-import { SaveButton } from "@/features/save-post";
+import { BookmarkIcon } from "@/shared/ui";
+import { LikeButton } from "@/features/like-post";
 import { AddCommentForm } from "@/features/add-comment";
 import { CommentLikeButton } from "@/features/like-comment";
 import { useFormatCount, useFormatter } from "@/shared/i18n";
@@ -22,7 +22,12 @@ function PostDetailDialog({ postId }: { postId: string }) {
   const post = usePostStore((s) => s.posts.find((p) => p.id === postId));
   const closePostDetail = usePostStore((s) => s.closePostDetail);
   const comments = useCommentStore((s) => s.commentsByPost[postId]);
-  const { likeOnce } = useLikePost();
+  const toggleLike = usePostStore((s) => s.toggleLike);
+  const toggleSave = usePostStore((s) => s.toggleSave);
+  // Explore still runs on mock posts (FE-11): likes stay in the local store
+  const likeOnce = (id: string) => {
+    if (!usePostStore.getState().posts.find((p) => p.id === id)?.isLiked) toggleLike(id);
+  };
   const [showHeartBurst, setShowHeartBurst] = useState(false);
   const format = useFormatter();
   const formatCount = useFormatCount();
@@ -130,7 +135,7 @@ function PostDetailDialog({ postId }: { postId: string }) {
           <div className="border-t border-zinc-200 dark:border-zinc-800 p-3.5 bg-zinc-50/50 dark:bg-zinc-950/50">
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-4">
-                <LikeButton postId={post.id} isLiked={post.isLiked} />
+                <LikeButton isLiked={post.isLiked} onToggle={() => toggleLike(post.id)} />
                 <button className="hover:opacity-70" aria-label="Comment">
                   <FiMessageCircle className="w-6 h-6 text-zinc-900 dark:text-zinc-100" />
                 </button>
@@ -138,7 +143,9 @@ function PostDetailDialog({ postId }: { postId: string }) {
                   <FiSend className="w-6 h-6 text-zinc-900 dark:text-zinc-100" />
                 </button>
               </div>
-              <SaveButton postId={post.id} isSaved={post.isSaved} />
+              <button type="button" aria-label="Save" onClick={() => toggleSave(post.id)} className="p-2 hover:opacity-60">
+                <BookmarkIcon filled={post.isSaved} className="size-6" />
+              </button>
             </div>
             <div className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
               {formatCount(post.likesCount)} отметок «Нравится»

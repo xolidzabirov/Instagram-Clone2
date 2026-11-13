@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import type { ProfileTab } from "@/shared/config";
 import { useTranslations } from "@/shared/i18n";
 import { useInfiniteScroll } from "@/shared/lib";
@@ -49,6 +50,7 @@ function EmptyGrid({ tab, isMe }: { tab: ProfileTab; isMe: boolean }) {
 /** The grid under the tabs: infinite scroll, skeletons, empty and error states */
 export function ProfileGrid({ username, tab, isMe }: ProfileGridProps) {
   const common = useTranslations("common");
+  const router = useRouter();
   const grid = useProfileGrid(username, tab);
   const posts = grid.data?.pages.flatMap((page) => page.items) ?? [];
 
@@ -77,8 +79,7 @@ export function ProfileGrid({ username, tab, isMe }: ProfileGridProps) {
 
   return (
     <>
-      {/* Opening a post arrives with the post page (FE-8) */}
-      <PostGrid posts={posts} />
+      <PostGrid posts={posts} onPostClick={(id) => router.push(`/p/${id}`)} />
       <div ref={sentinel} aria-hidden />
       {grid.isFetchingNextPage && (
         <div className="flex justify-center py-6">

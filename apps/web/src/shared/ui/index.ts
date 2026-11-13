@@ -18,6 +18,7 @@ export { Input, PasswordInput, type InputProps } from "./input/Input";
 export { Textarea } from "./input/Textarea";
 export { Logo, LogoMark } from "./logo/Logo";
 export { Modal, ModalAction } from "./modal/Modal";
+export { RichText } from "./rich-text/RichText";
 export { SegmentedControl } from "./segmented/SegmentedControl";
 export { Skeleton } from "./skeleton/Skeleton";
 export { Spinner } from "./spinner/Spinner";

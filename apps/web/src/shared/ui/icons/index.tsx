@@ -55,6 +55,14 @@ import {
   PiFilmSlate,
   PiStar,
   PiStarFill,
+  PiRepeat,
+  PiRepeatBold,
+  PiImages,
+  PiArrowLeft,
+  PiCornersOut,
+  PiMagnifyingGlassPlus,
+  PiMapPin,
+  PiCaretUp,
 } from "react-icons/pi";
 
 export type IconProps = SVGAttributes<SVGElement> & { size?: number | string };
@@ -116,3 +124,10 @@ export const ChevronDownIcon = single(PiCaretDown);
 export const LinkIcon = single(PiLink);
 export const ReelTabIcon = single(PiFilmSlate);
 export const StarIcon = pair(PiStar, PiStarFill);
+export const RepostIcon = pair(PiRepeat, PiRepeatBold);
+export const MediaIcon = single(PiImages);
+export const ArrowLeftIcon = single(PiArrowLeft);
+export const CropIcon = single(PiCornersOut);
+export const ZoomIcon = single(PiMagnifyingGlassPlus);
+export const LocationIcon = single(PiMapPin);
+export const ChevronUpIcon = single(PiCaretUp);

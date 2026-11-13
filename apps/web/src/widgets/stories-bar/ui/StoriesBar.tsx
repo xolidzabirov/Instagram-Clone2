@@ -20,7 +20,7 @@ export function StoriesBar() {
   );
 
   return (
-    <div className="flex items-center gap-4 py-4 px-2 overflow-x-auto no-scrollbar border-b border-zinc-200 dark:border-zinc-800">
+    <div className="no-scrollbar flex items-center gap-4 overflow-x-auto px-2 py-4">
       {storyRings.map((story) => (
         <StoryRing key={story.user.id} story={story} onClick={() => openStoryByUser(story.user.id)} />
       ))}

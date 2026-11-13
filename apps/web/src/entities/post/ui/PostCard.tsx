@@ -1,147 +1,159 @@
 "use client";
 
+import type { Post } from "@ig/shared";
+import Link from "next/link";
 import { useState, type ReactNode } from "react";
-import Image from "next/image";
-import { DEFAULT_AVATAR } from "@/shared/config";
-import type { MockPost as Post } from "../model/types";
-import { FiMessageCircle, FiSend } from "react-icons/fi";
-import { FaHeart } from "react-icons/fa";
-import { useFormatCount, useFormatter } from "@/shared/i18n";
+import { profileRoute } from "@/shared/config";
+import { useFormatter, useRelativeTime, useTranslations } from "@/shared/i18n";
+import { Avatar, CommentIcon, RichText, Skeleton, VerifiedBadge } from "@/shared/ui";
+import { PostMedia } from "./PostMedia";
+
+const CAPTION_PREVIEW = 125;
 
 interface PostCardProps {
-  post: Post;
-  /** Like button, provided by the like-post feature */
+  post: Post & { isSuggested?: boolean };
+  /** Feature buttons: like, repost, share, save and the "…" menu */
   likeSlot?: ReactNode;
-  /** Save button, provided by the save-post feature */
+  repostSlot?: ReactNode;
+  shareSlot?: ReactNode;
   saveSlot?: ReactNode;
-  onDoubleTap?: (postId: string) => void;
-  onComment?: (postId: string) => void;
-  onShare?: (postId: string) => void;
+  menuSlot?: ReactNode;
+  /** e.g. "· Follow" next to the name of a suggested account */
+  headerAction?: ReactNode;
+  onDoubleTap?: () => void;
+  /** First card of the feed: load its image eagerly */
+  priority?: boolean;
 }
 
+function Caption({ post }: { post: Post }) {
+  const t = useTranslations("post");
+  const [expanded, setExpanded] = useState(false);
+  const firstBreak = post.caption.indexOf("\n");
+  const cut = Math.min(CAPTION_PREVIEW, firstBreak === -1 ? Infinity : firstBreak);
+  const long = post.caption.length > cut;
+  const text = expanded || !long ? post.caption : post.caption.slice(0, cut).trimEnd();
+
+  return (
+    <div className="whitespace-pre-line break-words text-sm leading-[18px]">
+      <Link href={profileRoute(post.author.username)} className="mr-1 font-semibold hover:opacity-60">
+        {post.author.username}
+      </Link>
+      <RichText text={text} />
+      {long && !expanded && (
+        <>
+          …{" "}
+          <button type="button" onClick={() => setExpanded(true)} className="text-muted">
+            {t("more")}
+          </button>
+        </>
+      )}
+    </div>
+  );
+}
+
+/** One post as Instagram shows it in the feed */
 export function PostCard({
   post,
   likeSlot,
+  repostSlot,
+  shareSlot,
   saveSlot,
+  menuSlot,
+  headerAction,
   onDoubleTap,
-  onComment,
-  onShare,
+  priority,
 }: PostCardProps) {
-  const [showHeartBurst, setShowHeartBurst] = useState(false);
-  const formatCount = useFormatCount();
+  const t = useTranslations("post");
+  const common = useTranslations("common");
+  const relativeTime = useRelativeTime();
   const format = useFormatter();
-
-  const handleDoubleTap = () => {
-    onDoubleTap?.(post.id);
-    setShowHeartBurst(true);
-    setTimeout(() => setShowHeartBurst(false), 850);
-  };
+  const authorHref = profileRoute(post.author.username);
+  const postHref = `/p/${post.id}`;
 
   return (
-    <article className="border-b border-zinc-200 dark:border-zinc-800 pb-4 mb-4 select-none">
-      {/* Header */}
-      <div className="flex items-center gap-3 px-4 py-3">
-        <Image
-          src={post.author.avatar ?? DEFAULT_AVATAR}
-          unoptimized={!post.author.avatar}
-          alt={post.author.username}
-          width={34}
-          height={34}
-          className="rounded-full object-cover w-[34px] h-[34px]"
-        />
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-1.5">
-            <span className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 hover:underline cursor-pointer">
+    <article className="border-b border-separator pb-4 md:mb-4 md:pb-5" aria-label={post.author.username}>
+      <header className="flex items-center gap-3 px-3 py-2.5 md:px-1 md:pb-3 md:pt-0">
+        <Link href={authorHref} aria-hidden tabIndex={-1}>
+          <Avatar src={post.author.avatar} alt="" size="sm" />
+        </Link>
+        <div className="min-w-0 flex-1 text-sm leading-[18px]">
+          <div className="flex items-center gap-1">
+            <Link href={authorHref} className="truncate font-semibold hover:opacity-60">
               {post.author.username}
+            </Link>
+            {post.author.isVerified && <VerifiedBadge label={common("verified")} className="text-xs" />}
+            <span className="shrink-0 text-muted">
+              •{" "}
+              <Link href={postHref} className="hover:opacity-60">
+                <time dateTime={post.createdAt} title={format.dateTime(new Date(post.createdAt), { dateStyle: "long" })}>
+                  {relativeTime(post.createdAt)}
+                </time>
+              </Link>
             </span>
-            {post.author.isVerified && (
-              <span className="text-blue-500 text-xs">●</span>
-            )}
-            <span className="text-zinc-400 text-xs">• 2 ч.</span>
+            {headerAction}
           </div>
-          {post.location && (
-            <p className="text-xs text-zinc-500 truncate">{post.location}</p>
+          {post.isSuggested ? (
+            <p className="truncate text-xs text-muted">{t("suggested")}</p>
+          ) : (
+            post.location && <p className="truncate text-xs">{post.location.name}</p>
           )}
         </div>
-      </div>
+        {menuSlot}
+      </header>
 
-      {/* Image with Double Tap */}
-      <div
-        className="relative aspect-square bg-zinc-100 dark:bg-zinc-900 cursor-pointer overflow-hidden"
-        onDoubleClick={handleDoubleTap}
-      >
-        <Image
-          src={post.images[0]?.url ?? ""}
-          alt={post.images[0]?.altText ?? post.caption}
-          fill
-          className="object-cover"
-          loading="lazy"
-          sizes="(max-width: 470px) 100vw, 470px"
-        />
+      <PostMedia
+        media={post.media}
+        aspectRatio={post.aspectRatio}
+        onDoubleTap={onDoubleTap}
+        priority={priority}
+        className="md:rounded-[4px] md:border md:border-separator"
+      />
 
-        {/* Double-tap heart animation */}
-        {showHeartBurst && (
-          <div className="absolute inset-0 flex items-center justify-center z-20 pointer-events-none">
-            <FaHeart className="w-24 h-24 text-white/95 animate-heart-burst drop-shadow-2xl" />
-          </div>
-        )}
-      </div>
-
-      {/* Actions */}
-      <div className="flex items-center justify-between px-4 pt-3">
-        <div className="flex items-center gap-4">
+      <div className="flex flex-col gap-1.5 px-3 pt-1 md:px-1">
+        <div className="-mx-2 flex items-center">
           {likeSlot}
-          <button
-            onClick={() => onComment?.(post.id)}
-            aria-label="Comment"
-            className="hover:opacity-70 transition-transform active:scale-125"
-          >
-            <FiMessageCircle className="w-6 h-6 text-zinc-900 dark:text-zinc-100" />
-          </button>
-          <button
-            onClick={() => onShare?.(post.id)}
-            aria-label="Share"
-            className="hover:opacity-70 transition-transform active:scale-125"
-          >
-            <FiSend className="w-6 h-6 text-zinc-900 dark:text-zinc-100" />
-          </button>
+          {!post.commentsDisabled && (
+            <Link
+              href={postHref}
+              aria-label={t("comment")}
+              className="p-2 transition-opacity hover:opacity-60"
+            >
+              <CommentIcon className="size-6 -scale-x-100" />
+            </Link>
+          )}
+          {repostSlot}
+          {shareSlot}
+          <div className="ml-auto">{saveSlot}</div>
         </div>
-        {saveSlot}
+
+        <p className="text-sm font-semibold">
+          {post.likesCount === null ? t("likesHidden") : t("likes", { count: post.likesCount })}
+        </p>
+
+        {post.caption && <Caption post={post} />}
+
+        {post.commentsDisabled ? null : post.commentsCount > 0 ? (
+          <Link href={postHref} className="text-sm text-muted hover:opacity-70">
+            {t("viewComments", { count: post.commentsCount })}
+          </Link>
+        ) : null}
       </div>
-
-      {/* Likes */}
-      <div className="px-4 pt-2">
-        <span className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
-          {formatCount(post.likesCount)} отметок «Нравится»
-        </span>
-      </div>
-
-      {/* Caption */}
-      {post.caption && (
-        <div className="px-4 pt-1">
-          <span className="text-sm leading-relaxed">
-            <span className="font-semibold text-zinc-900 dark:text-zinc-100">
-              {post.author.username}
-            </span>{" "}
-            <span className="text-zinc-800 dark:text-zinc-200">{post.caption}</span>
-          </span>
-        </div>
-      )}
-
-      {/* Comments link */}
-      <button
-        className="px-4 pt-1 text-sm text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300 block text-left"
-        onClick={() => onComment?.(post.id)}
-      >
-        {post.commentsCount > 0
-          ? `Посмотреть все комментарии (${post.commentsCount})`
-          : "Добавить комментарий..."}
-      </button>
-
-      {/* Timestamp */}
-      <time className="block px-4 pt-1 text-[10px] uppercase text-zinc-400">
-        {format.dateTime(new Date(post.createdAt), { day: "numeric", month: "long", year: "numeric" })}
-      </time>
     </article>
+  );
+}
+
+export function PostCardSkeleton() {
+  return (
+    <div className="border-b border-separator pb-5 md:mb-4" aria-hidden>
+      <div className="flex items-center gap-3 px-3 py-2.5 md:px-1 md:pt-0">
+        <Skeleton className="size-8 rounded-full" />
+        <Skeleton className="h-3.5 w-32" />
+      </div>
+      <Skeleton className="aspect-[4/5] w-full rounded-none md:rounded-[4px]" />
+      <div className="flex flex-col gap-2 px-3 pt-3 md:px-1">
+        <Skeleton className="h-3.5 w-24" />
+        <Skeleton className="h-3.5 w-64 max-w-full" />
+      </div>
+    </div>
   );
 }

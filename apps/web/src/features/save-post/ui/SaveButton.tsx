@@ -1,29 +1,37 @@
 "use client";
 
-import { FiBookmark } from "react-icons/fi";
-import { usePostStore } from "@/entities/post";
+import type { Post } from "@ig/shared";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useTranslations } from "@/shared/i18n";
+import { BookmarkIcon, toast } from "@/shared/ui";
+import { patchPost, postApi, postKeys } from "@/entities/post";
 
-interface SaveButtonProps {
-  postId: string;
-  isSaved: boolean;
-}
+/** Bookmark: saves into "All posts" instantly; the Saved tab refetches next time it is opened */
+export function SaveButton({ post }: { post: Pick<Post, "id" | "isSaved"> }) {
+  const t = useTranslations("post");
+  const queryClient = useQueryClient();
 
-export function SaveButton({ postId, isSaved }: SaveButtonProps) {
-  const toggleSave = usePostStore((s) => s.toggleSave);
+  const mutation = useMutation({
+    mutationFn: (saved: boolean) => postApi.save(post.id, saved),
+    onMutate: (saved) => patchPost(queryClient, post.id, () => ({ isSaved: saved })),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: [...postKeys.allGrids()], predicate: (query) => query.queryKey[3] === "saved" });
+    },
+    onError: (_error, saved) => {
+      patchPost(queryClient, post.id, () => ({ isSaved: !saved }));
+      toast.error(t("error"));
+    },
+  });
 
   return (
     <button
-      onClick={() => toggleSave(postId)}
-      aria-label={isSaved ? "Unsave" : "Save"}
-      className="hover:opacity-70 transition-transform active:scale-125"
+      type="button"
+      aria-label={post.isSaved ? t("unsave") : t("save")}
+      aria-pressed={post.isSaved}
+      onClick={() => mutation.mutate(!post.isSaved)}
+      className="p-2 transition-opacity hover:opacity-60"
     >
-      <FiBookmark
-        className={`w-6 h-6 ${
-          isSaved
-            ? "fill-zinc-900 dark:fill-zinc-100 text-zinc-900 dark:text-zinc-100"
-            : "text-zinc-900 dark:text-zinc-100"
-        }`}
-      />
+      <BookmarkIcon filled={post.isSaved} className="size-6" />
     </button>
   );
 }

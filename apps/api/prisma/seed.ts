@@ -74,6 +74,86 @@ const TOPICS = [
   { slug: "pets", nameRu: "Питомцы", nameEn: "Pets", tags: ["pets", "cats", "dogs"] },
 ] as const;
 
+/** Unsplash photos per topic (checked reachable); the API stores URLs, Unsplash resizes them */
+const PHOTOS: Record<(typeof TOPICS)[number]["slug"], string[]> = {
+  travel: [
+    "1506744038136-46273834b3fb",
+    "1469474968028-56623f02e42e",
+    "1476514525535-07fb3b4ae5f1",
+    "1464822759023-fed622ff2c3b",
+    "1501785888041-af3ef285b470",
+    "1519681393784-d120267933ba",
+  ],
+  food: [
+    "1504674900247-0877df9cc836",
+    "1512621776951-a57141f2eefd",
+    "1493770348161-369560ae357d",
+    "1495474472287-4d71bcdd2085",
+    "1540189549336-e6e99c3679fe",
+    "1565299624946-b28f40a0ae38",
+    "1414235077428-338989a2e8c0",
+  ],
+  code: [
+    "1498050108023-c5249f4df085",
+    "1517694712202-14dd9538aa97",
+    "1555066931-4365d14bab8c",
+    "1461749280684-dccba630e2f6",
+    "1515879218367-8466d910aaa4",
+  ],
+  design: [
+    "1561070791-2526d30994b5",
+    "1558655146-9f40138edfeb",
+    "1586717791821-3f44a563fa4c",
+    "1618005182384-a83a8bd57fbe",
+  ],
+  nature: [
+    "1470071459604-3b5ec3a7fe05",
+    "1441974231531-c6227db76b6e",
+    "1472214103451-9374bd1c798e",
+    "1500530855697-b586d89ba3ee",
+    "1507525428034-b723cf961d3e",
+    "1433086966358-54859d0ed716",
+  ],
+  architecture: [
+    "1487958449943-2429e8be8625",
+    "1486406146926-c627a92ad1ab",
+    "1449824913935-59a10b8d2000",
+    "1519501025264-65ba15a82390",
+    "1618221195710-dd6b41faaea6",
+  ],
+  art: [
+    "1541961017774-22349e4a1262",
+    "1579783902614-a3fb3927b6a5",
+    "1513364776144-60967b0f800f",
+  ],
+  fitness: [
+    "1517836357463-d25dfeac3438",
+    "1571019613454-1cb2f99b2d8b",
+    "1534438327276-14e5300c3a48",
+  ],
+  music: [
+    "1511379938547-c1f69419868d",
+    "1493225457124-a3eb161ffa5f",
+    "1470225620780-dba8ba36b745",
+  ],
+  fashion: [
+    "1490481651871-ab68de25d43d",
+    "1483985988355-763728e1935b",
+    "1515886657613-9f3515b0c78f",
+  ],
+  cars: [
+    "1494976388531-d1058494cdd8",
+    "1503376780353-7e6692767b70",
+    "1492144534655-ae79c964c9d7",
+  ],
+  pets: [
+    "1514888286974-6c03e2ca1dba",
+    "1543466835-00a7907e9de1",
+    "1518791841217-8f162f1e1131",
+    "1587300003388-59208cc962cb",
+  ],
+};
+
 const LOCATIONS = [
   { name: "Душанбе", city: "Душанбе", country: "Таджикистан", lat: 38.5598, lng: 68.787 },
   { name: "Памир", city: "Хорог", country: "Таджикистан", lat: 37.4897, lng: 71.5531 },
@@ -135,23 +215,24 @@ const MESSAGES = [
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-/** picsum.photos serves a stable photo per seed; sizes mirror our WebP variants */
+/** A seed photo from Unsplash: same width variants as our WebP pipeline, cropped to the media size */
 function imageMedia(
   ownerId: string,
-  seed: string,
+  photoId: string,
   width: number,
   height: number,
   createdAt: Date,
   purpose: MediaPurpose = MediaPurpose.POST
 ): Prisma.MediaCreateManyInput {
-  const url = (w: number) => `https://picsum.photos/seed/${seed}/${w}/${Math.round((w * height) / width)}`;
+  const url = (w: number) =>
+    `https://images.unsplash.com/photo-${photoId}?w=${w}&h=${Math.round((w * height) / width)}&fit=crop&auto=format&q=80`;
   return {
     id: idAt(createdAt),
     ownerId,
     type: MediaType.IMAGE,
     purpose,
     status: MediaStatus.READY,
-    originalKey: `seed/${seed}`,
+    originalKey: `seed/${photoId}/${createdAt.getTime()}`,
     variants: { "1080": url(1080), "640": url(640), "320": url(320) },
     width,
     height,
@@ -360,7 +441,7 @@ async function main() {
       const slides = chance(0.25) ? int(2, 5) : 1;
 
       for (let position = 0; position < slides; position++) {
-        const m = imageMedia(author.id, `${postId}-${position}`, 1080, 1440, createdAt);
+        const m = imageMedia(author.id, pick(PHOTOS[topic.slug]), 1080, 1440, createdAt);
         m.id = uuidv7({ msecs: createdAt.getTime() + position + 1 });
         media.push(m);
         postMedia.push({ postId, mediaId: m.id, position });
@@ -450,7 +531,7 @@ async function main() {
   for (const author of sample(regularUsers, 14).concat(demo)) {
     for (let s = 0; s < int(1, 3); s++) {
       const createdAt = ago(int(10, 20 * 60) * 60_000);
-      const m = imageMedia(author.id, `story-${author.username}-${s}`, 1080, 1920, createdAt, MediaPurpose.STORY);
+      const m = imageMedia(author.id, pick(PHOTOS[pick(author.topics) as keyof typeof PHOTOS]), 1080, 1920, createdAt, MediaPurpose.STORY);
       storyMedia.push(m);
       const storyId = uuidv7({ msecs: createdAt.getTime() + 1 });
       stories.push({

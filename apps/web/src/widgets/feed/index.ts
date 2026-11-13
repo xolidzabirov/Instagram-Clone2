@@ -1,1 +1,2 @@
-export { Feed } from "./ui/Feed";
+export { Feed, FeedModeTabs } from "./ui/Feed";
+export { FeedPost } from "./ui/FeedPost";

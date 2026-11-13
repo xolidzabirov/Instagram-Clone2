@@ -1,28 +1,33 @@
 "use client";
 
-import { FiHeart } from "react-icons/fi";
-import { FaHeart } from "react-icons/fa";
-import { useLikePost } from "../model/useLikePost";
+import { useState } from "react";
+import { useTranslations } from "@/shared/i18n";
+import { cn } from "@/shared/lib";
+import { HeartIcon } from "@/shared/ui";
 
 interface LikeButtonProps {
-  postId: string;
   isLiked: boolean;
+  onToggle: () => void;
 }
 
-export function LikeButton({ postId, isLiked }: LikeButtonProps) {
-  const { toggleLike } = useLikePost();
+/** Instagram's heart: outline → red with a little pop */
+export function LikeButton({ isLiked, onToggle }: LikeButtonProps) {
+  const t = useTranslations("post");
+  const [pop, setPop] = useState(false);
 
   return (
     <button
-      onClick={() => toggleLike(postId)}
-      aria-label={isLiked ? "Unlike" : "Like"}
-      className="hover:opacity-70 transition-transform active:scale-125"
+      type="button"
+      aria-label={isLiked ? t("unlike") : t("like")}
+      aria-pressed={isLiked}
+      onClick={() => {
+        if (!isLiked) setPop(true);
+        onToggle();
+      }}
+      onAnimationEnd={() => setPop(false)}
+      className={cn("p-2 transition-opacity", !isLiked && "hover:opacity-60", pop && "animate-like-pop")}
     >
-      {isLiked ? (
-        <FaHeart className="w-6 h-6 text-red-500" />
-      ) : (
-        <FiHeart className="w-6 h-6 text-zinc-900 dark:text-zinc-100" />
-      )}
+      <HeartIcon filled={isLiked} className={cn("size-6", isLiked && "text-danger")} />
     </button>
   );
 }
