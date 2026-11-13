@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { FiEdit, FiPhone, FiVideo, FiInfo, FiSmile, FiImage, FiHeart } from "react-icons/fi";
 import { Avatar as UserAvatar } from "@/shared/ui";
-import { useAuth } from "@/features/auth";
+import { useSession } from "@/entities/session";
 
 interface Message {
   id: string;
@@ -110,7 +110,7 @@ const INITIAL_CHATS: Chat[] = [
 ];
 
 export function DirectPage() {
-  const { user } = useAuth();
+  const user = useSession();
   const [chats, setChats] = useState<Chat[]>(INITIAL_CHATS);
   const [activeChatId, setActiveChatId] = useState<string>("chat_1");
   const [inputMessage, setInputMessage] = useState("");

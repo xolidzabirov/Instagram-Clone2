@@ -1,105 +1,112 @@
 "use client";
 
-import { useState } from "react";
-import { registerSchema } from "@ig/shared";
-import { useAuth } from "../model/useAuth";
+import { registerRequestSchema } from "@ig/shared";
+import { useState, type FormEvent } from "react";
+import { toApiError } from "@/shared/api";
+import { useTranslations } from "@/shared/i18n";
+import { Button, CheckIcon, FieldErrorIcon, Input, PasswordInput, Spinner } from "@/shared/ui";
+import { authErrorKey } from "../model/errors";
+import { useRegister } from "../model/useAuthActions";
+import { useUsernameCheck } from "../model/useUsernameCheck";
+
+type Field = "email" | "password" | "fullName" | "username";
+const FIELDS: Field[] = ["email", "password", "fullName", "username"];
 
 export function RegisterForm() {
-  const { register } = useAuth();
-  const [form, setForm] = useState({
-    email: "",
-    fullName: "",
-    username: "",
-    password: "",
-    confirmPassword: "",
-  });
-  const [errors, setErrors] = useState<Record<string, string>>({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const t = useTranslations();
+  const register = useRegister();
+  const [values, setValues] = useState<Record<Field, string>>({ email: "", password: "", fullName: "", username: "" });
+  const [touched, setTouched] = useState<Partial<Record<Field, boolean>>>({});
+  const [submitted, setSubmitted] = useState(false);
+  const usernameCheck = useUsernameCheck(values.username);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setErrors({});
+  // Client-side validation with the same schema the API uses
+  const parsed = registerRequestSchema.safeParse(values);
+  const invalid = new Set<Field>(parsed.success ? [] : parsed.error.issues.map((issue) => issue.path[0] as Field));
+  const showError = (field: Field) => (touched[field] || submitted) && values[field] !== "" && invalid.has(field);
 
-    const result = registerSchema.safeParse(form);
-    if (!result.success) {
-      const fieldErrors: Record<string, string> = {};
-      result.error.issues.forEach((issue) => {
-        const key = issue.path[0]?.toString();
-        if (key) fieldErrors[key] = issue.message;
-      });
-      setErrors(fieldErrors);
-      return;
+  const apiError = register.error ? toApiError(register.error) : null;
+  const usernameTaken = usernameCheck.result?.available === false && usernameCheck.result.reason === "TAKEN";
+
+  const errorFor = (field: Field): string | undefined => {
+    if (field === "username" && usernameTaken) {
+      const suggestions = usernameCheck.result?.suggestions ?? [];
+      return suggestions.length > 0
+        ? `${t("auth.usernameTaken")} ${t("auth.usernameSuggestions", { list: suggestions.join(", ") })}`
+        : t("auth.usernameTaken");
     }
-
-    setIsSubmitting(true);
-    try {
-      await register(result.data);
-    } catch {
-      setErrors({ email: "Ошибка регистрации. Попробуйте другой email." });
-    } finally {
-      setIsSubmitting(false);
-    }
+    if (apiError?.code === "EMAIL_TAKEN" && field === "email") return t("auth.errors.emailTaken");
+    if (apiError?.code === "USERNAME_TAKEN" && field === "username") return t("auth.errors.usernameTaken");
+    return showError(field) ? t(`auth.fieldErrors.${field}`) : undefined;
   };
 
-  const update = (field: string) => (e: React.ChangeEvent<HTMLInputElement>) =>
-    setForm({ ...form, [field]: e.target.value });
+  /** Instagram marks each filled field with a red cross or a grey check once you leave it */
+  const statusIcon = (field: Field) => {
+    if (field === "username" && values.username && usernameCheck.checking) return <Spinner size="sm" className="text-muted" />;
+    if (!values[field] || !(touched[field] || submitted)) return null;
+    return errorFor(field) ? (
+      <FieldErrorIcon className="size-[22px] text-danger" />
+    ) : (
+      <CheckIcon className="size-[22px] text-muted" />
+    );
+  };
+
+  const formError =
+    apiError && apiError.code !== "EMAIL_TAKEN" && apiError.code !== "USERNAME_TAKEN" && apiError.code !== "VALIDATION_ERROR"
+      ? t(`auth.errors.${authErrorKey(apiError)}`)
+      : null;
+
+  const handleSubmit = (event: FormEvent) => {
+    event.preventDefault();
+    setSubmitted(true);
+    if (parsed.success && !usernameTaken) register.mutate(parsed.data);
+  };
+
+  const field = (name: Field, label: string, props: Record<string, unknown>) => {
+    const common = {
+      label,
+      name,
+      value: values[name],
+      error: errorFor(name),
+      onChange: (e: { target: { value: string } }) => {
+        setValues((v) => ({ ...v, [name]: e.target.value }));
+        if (register.error) register.reset();
+      },
+      onBlur: () => setTouched((v) => ({ ...v, [name]: true })),
+      ...props,
+    };
+    return name === "password" ? (
+      <PasswordInput key={name} {...common} showLabel={t("common.showPassword")} hideLabel={t("common.hidePassword")} />
+    ) : (
+      <Input key={name} {...common} rightSlot={statusIcon(name)} />
+    );
+  };
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-2 w-full">
-      <input
-        type="email"
-        placeholder="Эл. адрес"
-        value={form.email}
-        onChange={update("email")}
-        className="w-full px-3 py-2 text-sm bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-sm focus:outline-none focus:border-zinc-400"
-      />
-      {errors.email && <p className="text-xs text-red-500">{errors.email}</p>}
+    <form onSubmit={handleSubmit} noValidate className="flex w-full flex-col gap-1.5">
+      {field("email", t("auth.email"), { type: "email", autoComplete: "email", autoCapitalize: "off", spellCheck: false })}
+      {field("password", t("auth.password"), { autoComplete: "new-password" })}
+      {field("fullName", t("auth.fullName"), { autoComplete: "name" })}
+      {field("username", t("auth.username"), { autoComplete: "username", autoCapitalize: "off", spellCheck: false })}
 
-      <input
-        type="text"
-        placeholder="Имя и фамилия"
-        value={form.fullName}
-        onChange={update("fullName")}
-        className="w-full px-3 py-2 text-sm bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-sm focus:outline-none focus:border-zinc-400"
-      />
-      {errors.fullName && <p className="text-xs text-red-500">{errors.fullName}</p>}
+      <p className="mt-2.5 text-center text-xs leading-4 text-muted">{t("auth.contactsNote")}</p>
+      <p className="mt-2 text-center text-xs leading-4 text-muted">{t("auth.termsNote")}</p>
 
-      <input
-        type="text"
-        placeholder="Имя пользователя"
-        value={form.username}
-        onChange={update("username")}
-        className="w-full px-3 py-2 text-sm bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-sm focus:outline-none focus:border-zinc-400"
-      />
-      {errors.username && <p className="text-xs text-red-500">{errors.username}</p>}
-
-      <input
-        type="password"
-        placeholder="Пароль"
-        value={form.password}
-        onChange={update("password")}
-        className="w-full px-3 py-2 text-sm bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-sm focus:outline-none focus:border-zinc-400"
-      />
-      {errors.password && <p className="text-xs text-red-500">{errors.password}</p>}
-
-      <input
-        type="password"
-        placeholder="Подтвердите пароль"
-        value={form.confirmPassword}
-        onChange={update("confirmPassword")}
-        className="w-full px-3 py-2 text-sm bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-sm focus:outline-none focus:border-zinc-400"
-      />
-      {errors.confirmPassword && (
-        <p className="text-xs text-red-500">{errors.confirmPassword}</p>
-      )}
-
-      <button
+      <Button
         type="submit"
-        disabled={isSubmitting}
-        className="w-full py-1.5 mt-1 bg-blue-500 hover:bg-blue-600 disabled:bg-blue-300 text-white text-sm font-semibold rounded-lg transition-colors"
+        size="sm"
+        fullWidth
+        className="mt-3"
+        disabled={FIELDS.some((name) => !values[name])}
+        loading={register.isPending}
       >
-        {isSubmitting ? "Регистрация..." : "Зарегистрироваться"}
-      </button>
+        {t("auth.signUpButton")}
+      </Button>
+      {formError && (
+        <p role="alert" className="mt-3 text-center text-sm text-danger">
+          {formError}
+        </p>
+      )}
     </form>
   );
 }

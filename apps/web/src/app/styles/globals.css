@@ -138,3 +138,13 @@ body {
 .filter-lark { filter: contrast(0.9) brightness(1.15) saturate(1.1); }
 .filter-ludwig { filter: contrast(1.1) brightness(1.05) saturate(0.9); }
 .filter-bw { filter: grayscale(1) contrast(1.15); }
+
+/* Login page phone: screenshots cross-fade like on instagram.com (3 slides, 5s each) */
+@keyframes phone-slide {
+  0%, 28% { opacity: 1; }
+  33%, 95% { opacity: 0; }
+  100% { opacity: 1; }
+}
+.animate-phone-slide {
+  animation: phone-slide 15s infinite;
+}

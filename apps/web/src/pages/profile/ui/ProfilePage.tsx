@@ -4,13 +4,13 @@ import { useState } from "react";
 import { Avatar as UserAvatar } from "@/shared/ui";
 import { PostGrid, toPostPreview, usePostStore } from "@/entities/post";
 import { mockCurrentUser } from "@/entities/user";
-import { useAuth } from "@/features/auth";
+import { useSession } from "@/entities/session";
 import { useCreatePostModal } from "@/features/create-post";
 import { FiGrid, FiBookmark, FiTag, FiPlusSquare, FiSettings } from "react-icons/fi";
 import type { PostPreview } from "@ig/shared";
 
 export function ProfilePage() {
-  const { user } = useAuth();
+  const user = useSession();
   const posts = usePostStore((s) => s.posts);
   const openPostDetail = usePostStore((s) => s.openPostDetail);
   const openCreateModal = useCreatePostModal((s) => s.open);
@@ -18,7 +18,7 @@ export function ProfilePage() {
 
   const username = user?.username || mockCurrentUser.username;
   const fullName = user?.fullName || mockCurrentUser.fullName;
-  const avatar = user?.avatar ?? mockCurrentUser.avatar;
+  const avatar = user ? user.avatar : mockCurrentUser.avatar;
 
   // Mock data until the profile is wired to the API (FE-5)
   const userPosts: PostPreview[] = posts

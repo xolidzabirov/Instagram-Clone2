@@ -30,7 +30,7 @@
 | DELETE | `/auth/sessions/:id` 🔒 | завершить сессию |
 | GET | `/auth/username-available?username=` | `{ available, reason?: "TAKEN" | "INVALID", suggestions[] }` |
 
-Ответ входа, регистрации и refresh — `AuthResponse`: `{ accessToken, expiresIn, user: CurrentUser, refreshToken? }` (`refreshToken` в теле только при `X-Client: mobile`, иначе cookie `ig_rt`).
+Ответ входа, регистрации и refresh — `AuthResponse`: `{ accessToken, expiresIn, user: CurrentUser, refreshToken? }` (`refreshToken` в теле только при `X-Client: mobile`, иначе cookie `ig_rt` плюс подсказка `ig_session` для proxy веб-приложения; logout очищает обе).
 
 **Коды ошибок auth** (поле `code`):
 

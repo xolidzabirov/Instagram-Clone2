@@ -13,7 +13,7 @@ import {
   MenuIcon,
   SettingsIcon,
 } from "@/shared/ui";
-import { useAuth } from "@/features/auth";
+import { useLogout } from "@/features/auth";
 import { LanguageToggleItem } from "@/features/change-language";
 import { ThemeToggleItem } from "@/features/toggle-theme";
 import { navItemClass, NavLabel } from "./NavItem";
@@ -21,7 +21,7 @@ import { navItemClass, NavLabel } from "./NavItem";
 /** "More" at the bottom of the sidebar: settings, saved, appearance, language, log out */
 export function MoreMenu({ collapsed }: { collapsed: boolean }) {
   const t = useTranslations();
-  const logout = useAuth((state) => state.logout);
+  const logout = useLogout();
 
   return (
     <Dropdown
@@ -43,7 +43,7 @@ export function MoreMenu({ collapsed }: { collapsed: boolean }) {
       <ThemeToggleItem />
       <LanguageToggleItem />
       <DropdownSeparator />
-      <DropdownItem icon={<LogoutIcon />} onSelect={() => void logout()}>
+      <DropdownItem icon={<LogoutIcon />} onSelect={() => logout.mutate()}>
         {t("menu.logout")}
       </DropdownItem>
     </Dropdown>

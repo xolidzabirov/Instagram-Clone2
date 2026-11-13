@@ -3,10 +3,12 @@ import { AppNavigation } from "@/widgets/navigation";
 import { PostDetailModal } from "@/widgets/post-detail";
 import { StoryViewerModal } from "@/widgets/story-viewer";
 import { CreatePostModal } from "@/features/create-post";
+import { SessionGate } from "@/entities/session";
 
 /** Shell of every signed-in page: navigation plus the app-wide modals */
 export function MainLayout({ children }: { children: ReactNode }) {
   return (
+    <SessionGate>
     <div className="min-h-dvh bg-background text-foreground">
       <AppNavigation />
       {/* Offsets match the navigation: bars above and below on phones, a sidebar from md */}
@@ -17,5 +19,6 @@ export function MainLayout({ children }: { children: ReactNode }) {
       <PostDetailModal />
       <StoryViewerModal />
     </div>
+    </SessionGate>
   );
 }

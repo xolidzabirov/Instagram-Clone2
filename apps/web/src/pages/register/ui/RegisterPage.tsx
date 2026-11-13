@@ -2,29 +2,35 @@
 
 import Link from "next/link";
 import { ROUTES } from "@/shared/config";
+import { useTranslations } from "@/shared/i18n";
+import { Logo } from "@/shared/ui";
 import { RegisterForm } from "@/features/auth";
+import { AuthCard, AuthFooter } from "@/widgets/auth-shell";
 
 export function RegisterPage() {
-  return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 dark:bg-black px-4 py-8">
-      <div className="flex flex-col gap-3 w-full max-w-[350px]">
-        <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-8 flex flex-col items-center gap-4 rounded-sm">
-          <h1 className="font-bold text-3xl tracking-tight">Instagram</h1>
-          <p className="text-zinc-500 font-semibold text-center text-sm">
-            Зарегистрируйтесь, чтобы смотреть фото и видео ваших друзей.
-          </p>
-          <RegisterForm />
-        </div>
+  const t = useTranslations("auth");
 
-        <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-5 text-center rounded-sm">
-          <p className="text-sm">
-            Есть аккаунт?{" "}
-            <Link href={ROUTES.login} className="text-blue-500 font-semibold hover:underline">
-              Вход
+  return (
+    <div className="flex min-h-dvh flex-col bg-background">
+      <main className="flex flex-1 justify-center pt-3 sm:pt-6">
+        <div className="flex w-full max-w-[350px] flex-col gap-2.5">
+          <AuthCard className="flex flex-col items-center px-10 pb-7 pt-9">
+            <h1 className="mb-3 mt-1 flex flex-col items-center gap-4">
+              <Logo className="text-[46px]" />
+              <span className="sr-only">{t("registerTitle")}</span>
+            </h1>
+            <p className="mb-5 text-center text-[17px] font-semibold leading-5 text-muted">{t("registerTagline")}</p>
+            <RegisterForm />
+          </AuthCard>
+          <AuthCard className="py-5 text-center text-sm">
+            {t("haveAccount")}{" "}
+            <Link href={ROUTES.login} className="font-semibold text-primary hover:text-link">
+              {t("logIn")}
             </Link>
-          </p>
+          </AuthCard>
         </div>
-      </div>
+      </main>
+      <AuthFooter />
     </div>
   );
 }

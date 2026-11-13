@@ -1,29 +1,9 @@
-import { apiClient } from "@/shared/api";
-import type { LoginInput, RegisterInput, User } from "@ig/shared";
-
-interface AuthResponse {
-  user: User;
-  accessToken: string;
-  refreshToken: string;
-}
+import type { ForgotPasswordInput, ResetPasswordInput, UsernameAvailability } from "@ig/shared";
+import { http } from "@/shared/api";
 
 export const authApi = {
-  login: async (data: LoginInput): Promise<AuthResponse> => {
-    const res = await apiClient.post<AuthResponse>("/auth/login", data);
-    return res.data;
-  },
-
-  register: async (data: RegisterInput): Promise<AuthResponse> => {
-    const res = await apiClient.post<AuthResponse>("/auth/register", data);
-    return res.data;
-  },
-
-  logout: async (): Promise<void> => {
-    await apiClient.post("/auth/logout");
-  },
-
-  getMe: async (): Promise<User> => {
-    const res = await apiClient.get<User>("/users/me");
-    return res.data;
-  },
+  usernameAvailable: (username: string, signal?: AbortSignal) =>
+    http.get<UsernameAvailability>("/auth/username-available", { params: { username }, signal }).then((res) => res.data),
+  forgotPassword: (body: ForgotPasswordInput) => http.post("/auth/password/forgot", body).then(() => undefined),
+  resetPassword: (body: ResetPasswordInput) => http.post("/auth/password/reset", body).then(() => undefined),
 };

@@ -2,26 +2,42 @@
 
 import Link from "next/link";
 import { ROUTES } from "@/shared/config";
+import { useTranslations } from "@/shared/i18n";
+import { Logo } from "@/shared/ui";
 import { LoginForm } from "@/features/auth";
+import { AuthCard, AuthDivider, AuthFooter, PhoneShowcase } from "@/widgets/auth-shell";
 
 export function LoginPage() {
-  return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 dark:bg-black px-4">
-      <div className="flex flex-col gap-3 w-full max-w-[350px]">
-        <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-8 flex flex-col items-center gap-6 rounded-sm">
-          <h1 className="font-bold text-3xl tracking-tight">Instagram</h1>
-          <LoginForm />
-        </div>
+  const t = useTranslations("auth");
 
-        <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-5 text-center rounded-sm">
-          <p className="text-sm">
-            У вас ещё нет аккаунта?{" "}
-            <Link href={ROUTES.register} className="text-blue-500 font-semibold hover:underline">
-              Зарегистрироваться
+  return (
+    <div className="flex min-h-dvh flex-col bg-background">
+      <main className="flex flex-1 items-center justify-center pt-8 sm:pt-12">
+        <PhoneShowcase />
+        <div className="flex w-full max-w-[350px] flex-col gap-2.5">
+          <AuthCard className="flex flex-col items-center px-10 pb-6 pt-10">
+            <h1 className="mb-8 mt-2">
+              <Logo className="text-[46px]" />
+              <span className="sr-only">{t("loginTitle")}</span>
+            </h1>
+            <LoginForm />
+            <AuthDivider />
+            <Link
+              href={ROUTES.resetPassword}
+              className="text-sm text-foreground hover:underline focus-visible:underline focus-visible:outline-none"
+            >
+              {t("forgotPassword")}
             </Link>
-          </p>
+          </AuthCard>
+          <AuthCard className="py-5 text-center text-sm">
+            {t("noAccount")}{" "}
+            <Link href={ROUTES.register} className="font-semibold text-primary hover:text-link">
+              {t("signUp")}
+            </Link>
+          </AuthCard>
         </div>
-      </div>
+      </main>
+      <AuthFooter />
     </div>
   );
 }

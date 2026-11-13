@@ -38,7 +38,7 @@
 - QueryClient с настройками по умолчанию, обработкой ошибок и devtools.
 - Socket-клиент (`shared/api/socket`) с переподключением и обновлением токена.
 - `entities/session`: стор (user, accessToken, status), bootstrap при старте (`/auth/refresh`), хук `useSession`.
-- `proxy.ts`: защита маршрутов по наличию cookie `ig_rt`.
+- `proxy.ts`: защита маршрутов по cookie-подсказке `ig_session` (`ig_rt` ограничен путём `/api/v1/auth` и на страницы не приходит).
 
 **Приёмка:** после входа (FE-4) перезагрузка страницы сохраняет сессию; истёкший access-токен прозрачно обновляется.
 

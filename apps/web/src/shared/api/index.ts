@@ -1,1 +1,2 @@
-export { apiClient } from "./apiClient";
+export { ApiError, toApiError } from "./errors";
+export { configureAuth, http } from "./http";

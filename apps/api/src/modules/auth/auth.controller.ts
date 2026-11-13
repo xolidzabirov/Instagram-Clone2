@@ -43,6 +43,11 @@ import type { ClientMeta } from "./session.service";
 import { SessionService } from "./session.service";
 
 export const REFRESH_COOKIE = "ig_rt";
+/**
+ * Holds no secret, only says "a session exists". The refresh cookie is scoped to /api/v1/auth,
+ * so pages never see it; the web app's proxy reads this one to redirect before rendering.
+ */
+export const SESSION_HINT_COOKIE = "ig_session";
 
 /** Mobile clients keep the refresh token in secure storage instead of a cookie */
 const isMobileClient = (req: Request) => req.headers["x-client"] === "mobile";
@@ -77,12 +82,14 @@ export class AuthController {
     const { refreshToken, ...body } = result;
     if (isMobileClient(req)) return { ...body, refreshToken };
     res.cookie(REFRESH_COOKIE, refreshToken, this.cookieOptions());
+    res.cookie(SESSION_HINT_COOKIE, "1", { ...this.cookieOptions(), path: "/" });
     return body;
   }
 
   private clearCookie(res: Response) {
     const { maxAge: _maxAge, ...options } = this.cookieOptions();
     res.clearCookie(REFRESH_COOKIE, options);
+    res.clearCookie(SESSION_HINT_COOKIE, { ...options, path: "/" });
   }
 
   @Public()

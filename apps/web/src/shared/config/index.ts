@@ -1,4 +1,8 @@
-export const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3003/api/v1";
+/**
+ * The browser calls the API on the site's own origin; next.config.ts rewrites /api/v1/* to the
+ * API server. Same origin means first-party cookies and no CORS.
+ */
+export const API_URL = "/api/v1";
 
 export const ROUTES = {
   home: "/",
@@ -8,6 +12,7 @@ export const ROUTES = {
   profile: "/profile",
   login: "/login",
   register: "/register",
+  resetPassword: "/reset-password",
 } as const;
 
 /** Instagram's grey silhouette for users without a profile picture */

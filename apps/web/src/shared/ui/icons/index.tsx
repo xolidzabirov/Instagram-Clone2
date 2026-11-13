@@ -40,8 +40,10 @@ import {
   PiSignOut,
   PiSun,
   PiTranslate,
+  PiLockKey,
   PiWarningCircle,
   PiX,
+  PiXCircle,
 } from "react-icons/pi";
 
 export type IconProps = SVGAttributes<SVGElement> & { size?: number | string };
@@ -91,3 +93,5 @@ export const InfoIcon = single(PiInfo);
 export const SuccessIcon = single(PiCheckCircle);
 export const WarningIcon = single(PiWarningCircle);
 export const VerifiedIcon = single(PiSealCheckFill);
+export const FieldErrorIcon = single(PiXCircle);
+export const LockIcon = single(PiLockKey);

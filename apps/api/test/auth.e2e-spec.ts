@@ -81,6 +81,10 @@ describe("register", () => {
     const cookie = ([] as string[]).concat(res.headers["set-cookie"]).find((c) => c.startsWith("ig_rt="))!;
     expect(cookie).toMatch(/HttpOnly/i);
     expect(cookie).toMatch(/Path=\/api\/v1\/auth/);
+    // A secret-free hint for the web proxy, visible on every page path
+    const hint = ([] as string[]).concat(res.headers["set-cookie"]).find((c) => c.startsWith("ig_session="))!;
+    expect(hint).toMatch(/^ig_session=1;/);
+    expect(hint).toMatch(/Path=\/;/);
     expect(lastCodeFor("alice@example.com")).toMatch(/^\d{6}$/);
   });
 
@@ -228,7 +232,10 @@ describe("refresh", () => {
 describe("logout", () => {
   it("ends the current session", async () => {
     const { token, cookie } = await register();
-    await http().post(`${AUTH}/logout`).set("Authorization", `Bearer ${token}`).expect(204);
+    const out = await http().post(`${AUTH}/logout`).set("Authorization", `Bearer ${token}`).expect(204);
+    const cleared = ([] as string[]).concat(out.headers["set-cookie"] ?? []);
+    expect(cleared.some((c) => c.startsWith("ig_rt=;"))).toBe(true);
+    expect(cleared.some((c) => c.startsWith("ig_session=;"))).toBe(true);
     await http().get(`${AUTH}/sessions`).set("Authorization", `Bearer ${token}`).expect(401);
     await http().post(`${AUTH}/refresh`).set("Cookie", cookie).send({}).expect(401);
   });

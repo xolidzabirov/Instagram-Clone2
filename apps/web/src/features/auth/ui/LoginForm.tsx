@@ -1,71 +1,57 @@
 "use client";
 
-import { useState } from "react";
-import { loginSchema, type LoginInput } from "@ig/shared";
-import { useAuth } from "../model/useAuth";
+import { loginSchema } from "@ig/shared";
+import { useState, type FormEvent } from "react";
+import { toApiError } from "@/shared/api";
+import { useTranslations } from "@/shared/i18n";
+import { Button, Input, PasswordInput } from "@/shared/ui";
+import { authErrorKey } from "../model/errors";
+import { useLogin } from "../model/useAuthActions";
 
 export function LoginForm() {
-  const { login } = useAuth();
-  const [form, setForm] = useState<LoginInput>({ login: "", password: "" });
-  const [errors, setErrors] = useState<Record<string, string>>({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const t = useTranslations();
+  const login = useLogin();
+  const [values, setValues] = useState({ login: "", password: "" });
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setErrors({});
+  // Instagram keeps the button disabled until both fields could be valid
+  const canSubmit = values.login.trim().length > 0 && values.password.length >= 6;
+  const error = login.error ? t(`auth.errors.${authErrorKey(toApiError(login.error))}`) : null;
 
-    const result = loginSchema.safeParse(form);
-    if (!result.success) {
-      const fieldErrors: Record<string, string> = {};
-      result.error.issues.forEach((issue) => {
-        const key = issue.path[0]?.toString();
-        if (key) fieldErrors[key] = issue.message;
-      });
-      setErrors(fieldErrors);
-      return;
-    }
-
-    setIsSubmitting(true);
-    try {
-      await login(result.data);
-    } catch {
-      setErrors({ login: "Неверный логин или пароль" });
-    } finally {
-      setIsSubmitting(false);
-    }
+  const handleSubmit = (event: FormEvent) => {
+    event.preventDefault();
+    const parsed = loginSchema.safeParse(values);
+    if (parsed.success) login.mutate(parsed.data);
   };
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-2 w-full">
-      <input
-        type="text"
-        placeholder="Телефон, имя пользователя или эл. адрес"
-        value={form.login}
-        onChange={(e) => setForm({ ...form, login: e.target.value })}
-        className="w-full px-3 py-2 text-sm bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-sm focus:outline-none focus:border-zinc-400"
+    <form onSubmit={handleSubmit} noValidate className="flex w-full flex-col gap-1.5">
+      <Input
+        label={t("auth.loginField")}
+        name="username"
+        autoComplete="username"
+        autoCapitalize="off"
+        autoCorrect="off"
+        spellCheck={false}
+        value={values.login}
+        onChange={(e) => setValues((v) => ({ ...v, login: e.target.value }))}
       />
-      {errors.login && (
-        <p className="text-xs text-red-500">{errors.login}</p>
-      )}
-
-      <input
-        type="password"
-        placeholder="Пароль"
-        value={form.password}
-        onChange={(e) => setForm({ ...form, password: e.target.value })}
-        className="w-full px-3 py-2 text-sm bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-sm focus:outline-none focus:border-zinc-400"
+      <PasswordInput
+        label={t("auth.password")}
+        name="password"
+        autoComplete="current-password"
+        showLabel={t("common.showPassword")}
+        hideLabel={t("common.hidePassword")}
+        value={values.password}
+        onChange={(e) => setValues((v) => ({ ...v, password: e.target.value }))}
       />
-      {errors.password && (
-        <p className="text-xs text-red-500">{errors.password}</p>
+      <Button type="submit" size="sm" fullWidth className="mt-2" disabled={!canSubmit} loading={login.isPending}>
+        {t("auth.logIn")}
+      </Button>
+      {error && (
+        <p role="alert" className="mt-3 text-center text-sm leading-[18px] text-danger">
+          {error}
+        </p>
       )}
-
-      <button
-        type="submit"
-        disabled={isSubmitting || !form.login || !form.password}
-        className="w-full py-1.5 mt-1 bg-blue-500 hover:bg-blue-600 disabled:bg-blue-300 text-white text-sm font-semibold rounded-lg transition-colors"
-      >
-        {isSubmitting ? "Вход..." : "Войти"}
-      </button>
     </form>
   );
 }

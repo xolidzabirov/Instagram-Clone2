@@ -2,8 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import { ROUTES } from "@/shared/config";
-import { mockCurrentUser } from "@/entities/user";
-import { useAuth } from "@/features/auth";
+import { useSession } from "@/entities/session";
 import { useCreatePostModal } from "@/features/create-post";
 import { useNavigationStore } from "./useNavigationStore";
 
@@ -12,7 +11,7 @@ export type NavSection = "home" | "search" | "explore" | "reels" | "messages" | 
 /** Everything the sidebar, the mobile header and the bottom bar share */
 export function useNavigation() {
   const pathname = usePathname() ?? "";
-  const user = useAuth((state) => state.user);
+  const user = useSession();
   const openCreatePost = useCreatePostModal((state) => state.open);
   const { activePanel, togglePanel, closePanel } = useNavigationStore();
 
@@ -40,7 +39,6 @@ export function useNavigation() {
       closePanel();
       openCreatePost();
     },
-    // Mock avatar until the session is wired to the API (FE-3)
-    avatar: user?.avatar ?? mockCurrentUser.avatar,
+    avatar: user?.avatar ?? null,
   };
 }
